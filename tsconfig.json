@@ -12,7 +12,7 @@
     "lib": ["dom", "dom.iterable", "ES2022"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "jsx": "preserve"
+    "jsx": "react"
   },
   "include": ["react-canary-env.d.ts", "src"],
   "exclude": ["node_modules"]

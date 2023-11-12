@@ -2,12 +2,15 @@
   "name": "react-form-action",
   "version": "0.1.0",
   "description": "State management helpers for the react form actions.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MiroslavPetrik/react-form-action.git"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "files": [
     "/dist"
   ],
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup"
   },
@@ -15,8 +18,14 @@
     ".": {
       "import": "./dist/index.mjs",
       "module": "./dist/index.mjs",
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./client": {
+      "import": "./dist/client.mjs",
+      "module": "./dist/client.mjs",
+      "default": "./dist/client.mjs",
+      "types": "./dist/client.d.mts"
     }
   },
   "keywords": [

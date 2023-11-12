@@ -1,3 +1,4 @@
+"use client";
 import type { RenderProp } from "react-render-prop-type";
 import { useFormStatus } from "react-dom";
 
