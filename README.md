@@ -1,6 +1,6 @@
 # react-form-action
 
-Typesafe success & error state control for Next.js v14 form actions.
+End-to-end typesafe success, error & validation state control for Next.js 14 form actions.
 
 ## Install
 
@@ -9,6 +9,60 @@ npm i react-form-action
 ```
 
 ## Usage
+
+### `formAction` builder
+
+```ts
+// app/actions/auth.ts
+"use server";
+
+import { formAction } from "react-form-action";
+import { z } from "zod";
+import { cookies } from "next/headers";
+
+const emailSchema = z.object({ email: z.string().email() });
+
+const i18nMiddleware = async () => {
+  const { t } = await useTranslation("auth", cookies().get("i18n")?.value);
+  // will be added to context
+  return { t };
+};
+
+const authAction = formAction(emailSchema)
+  .use(i18nMiddleware)
+  .use(async ({ ctx: { t } }) =>
+    console.log("🎉 context enhanced by previous middlewares 🎉", t)
+  )
+  .error((error) => {
+    if (error instanceof DbError) {
+      return error.custom.code;
+    } else {
+      // unknown error
+      // default Next.js error handling (error.js boundary)
+      throw error;
+    }
+  });
+
+export const resendVerifyEmailAction = authAction.run(
+  async ({ ctx: { t }, input: { email } }) => {
+    // do custom work
+    await db.resendVerificationEmail({ email });
+
+    // return translated success message
+    return t("verificationEmail.success");
+  }
+);
+
+export const sendResetPasswordEmail = authAction.run(
+  async ({ ctx: { t }, input: { email } }) => {
+    // do custom work
+    await db.emailPasswordSendPasswordResetEmail({ email });
+
+    // return translated success message
+    return t("resetPasswordEmail.success");
+  }
+);
+```
 
 ### Server Action (usable in Next.js)
 
