@@ -1,6 +1,6 @@
 {
   "name": "react-form-action",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "State management helpers for the react form actions.",
   "repository": {
     "type": "git",
@@ -12,7 +12,8 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "test": "vitest"
   },
   "exports": {
     ".": {
@@ -30,18 +31,19 @@
   },
   "keywords": [
     "react",
-    "form",
-    "action",
+    "form-action",
+    "react-form-action",
     "next",
+    "next-form-action",
     "nextjs",
-    "server",
-    "action"
+    "server-action"
   ],
   "author": "Miroslav Petrik",
   "license": "MIT",
   "peerDependencies": {
     "react": ">=18.2",
-    "react-dom": ">=18.2"
+    "react-dom": ">=18.2",
+    "zod": "^3"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
@@ -49,6 +51,9 @@
     "next": "^14.0.2",
     "react-render-prop-type": "^0.1.0",
     "tsup": "^7.2.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^1.2.2",
+    "zod": "^3.22.4",
+    "zod-form-data": "^2.0.2"
   }
 }
