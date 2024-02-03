@@ -5,42 +5,45 @@ import type { RenderProp } from "react-render-prop-type";
 import type {
   FormState,
   InitialState,
+  InvalidState,
   FailureState,
   SuccessState,
 } from "./createFormAction";
 import { useFormState } from "react-dom";
 import { FormStatus } from "./FormStatus";
 
-type FormStateProps<Data, Error, Payload> = {
+type FormStateProps<Data, ValidationError, Error, Payload> = {
   action: (
-    state: FormState<Data, Error>,
+    state: FormState<Data, ValidationError, Error>,
     payload: Payload
-  ) => Promise<FormState<Data, Error>>;
+  ) => Promise<FormState<Data, ValidationError, Error>>;
   initialData: Data;
   permalink?: string;
 };
 
-function initial<Data>(data: Data): InitialState<Data> {
-  return { type: "initial", data, error: null };
+export function initial<Data>(data: Data): InitialState<Data> {
+  return { type: "initial", data, error: null, validationError: null };
 }
 
-type FormMetaState<T extends FormState<unknown, unknown>> = T & {
+type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T & {
   isPending: boolean;
   isInitial: T["type"] extends "initial" ? true : false;
   isFailure: T["type"] extends "failure" ? true : false;
   isSuccess: T["type"] extends "success" ? true : false;
+  isInvalid: T["type"] extends "invalid" ? true : false;
 };
 
-export function Form<Data, Error>({
+export function Form<Data, ValidationError, Error>({
   children,
   action,
   initialData,
   permalink,
   ...props
 }: Omit<FormHTMLAttributes<HTMLFormElement>, "action" | "children"> &
-  FormStateProps<Data, Error, FormData> &
+  FormStateProps<Data, ValidationError, Error, FormData> &
   RenderProp<
     | FormMetaState<InitialState<Data>>
+    | FormMetaState<InvalidState<Error>>
     | FormMetaState<FailureState<Error>>
     | FormMetaState<SuccessState<Data>>
   >) {
@@ -54,16 +57,15 @@ export function Form<Data, Error>({
     <form action={formAction} {...props}>
       <FormStatus>
         {({ pending }) =>
-          children(
-            // @ts-expect-error its fine
-            {
-              ...state,
-              isPending: pending,
-              isInitial: state.type === "initial",
-              isFailure: state.type === "failure",
-              isSuccess: state.type === "success",
-            }
-          )
+          // @ts-expect-error unnarrowed booleans
+          children({
+            ...state,
+            isPending: pending,
+            isInitial: state.type === "initial",
+            isInvalid: state.type === "invalid",
+            isFailure: state.type === "failure",
+            isSuccess: state.type === "success",
+          })
         }
       </FormStatus>
     </form>

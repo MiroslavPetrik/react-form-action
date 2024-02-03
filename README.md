@@ -13,54 +13,65 @@ npm i react-form-action
 ### Server Action (usable in Next.js)
 
 ```ts
-// actions/updateUser.ts
 "use server";
+
 import { createFormAction } from "react-form-action";
+import { z } from "zod";
 
 // Define custom serializable error & success data types
 type ErrorData = {
   message: string;
-  validation?: boolean;
 };
 
-type SuccessData = string;
+type SuccessData = {
+  message: string;
+};
 
-export const updateUser = createFormAction<SuccessData, ErrorData>(
-  ({ success, failure }) =>
-    // success and failure helper functions create wrappers for success & error data respectively
-    async (prevState, formData) => {
-      if (prevState.type === "initial") {
-        // use the initialData passed to <Form /> here
-        // prevState.data === "foobar"
-      }
+type ValiationError = {
+  name?: string;
+};
 
-      try {
-        const { name } = updateUserSchema.parse({
-          name: formData.get("name"),
-        });
+const updateUserSchema = z.object({ name: z.string() });
 
-        const user = await updateCurrentUser(name);
-
-        if (user) {
-          const successState = success("Your profile has been updated.");
-          // {type: "success", data: "Your profile has been updated.", error: null }
-          return successState;
-        } else {
-          const errorState = failure({ message: "No current user." });
-          // {type: "error", data: null, error: { message: "No current user." } }
-          return errorState;
-        }
-      } catch (error) {
-        if (error instanceof ZodError) {
-          return failure({
-            validation: true,
-            message: error.issues[0]?.message ?? "Validation error",
-          });
-        }
-
-        return failure({ message: "Failed to update user." });
-      }
+export const updateUser = createFormAction<
+  SuccessData,
+  ErrorData,
+  ValiationError
+>(({ success, failure, invalid }) =>
+  // success and failure helper functions create wrappers for success & error data respectively
+  async (prevState, formData) => {
+    if (prevState.type === "initial") {
+      // use the initialData passed to <Form /> here
+      // prevState.data === "foobar"
     }
+
+    try {
+      const { name } = updateUserSchema.parse({
+        name: formData.get("name"),
+      });
+
+      const user = await updateCurrentUser(name);
+
+      if (user) {
+        // {type: "success", data: "Your profile has been updated.", error: null, validationError: null}
+        return success({
+          message: "Your profile has been updated.",
+        });
+      } else {
+        // {type: "error", data: null, error: { message: "No current user." }, validationError: null}
+        return failure({ message: "No current user." });
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // {type: "invalid", data: null, error: null, validationError: {name: "Invalid input"}}
+        return invalid({
+          name: error.issues[0]?.message ?? "Validation error",
+        });
+      }
+
+      return failure({ message: "Failed to update user." });
+    }
+  }
 );
 ```
 
@@ -76,18 +87,23 @@ import { updateUser } from "@/actions";
 export function UpdateUserForm() {
   return (
     <Form action={updateUser} initialData="foobar">
-      {({ error, data, isPending, isFailure, isSuccess, isInitial }) => (
+      {({
+        error,
+        data,
+        validationError,
+        isPending,
+        isFailure,
+        isInvalid,
+        isSuccess,
+        isInitial,
+      }) => (
         <>
           {/* safely access the data or error by checking the mutually exclusive boolean flags: */}
           {isSuccess && <p className="success-message">{data}</p>}
-
-          {isFailure && !error.validation && (
-            <p className="error-message">{error.message}</p>
-          )}
-
+          {isFailure && <p className="error-message">{error.message}</p>}
           <input type="text" name="name" disabled={isPending} />
-          {isFailure && error.validation && (
-            <span className="input-error">{error.message}</span>
+          {isInvalid && (
+            <span className="input-error">{validationError.name}</span>
           )}
 
           <button disabled={isPending}>
