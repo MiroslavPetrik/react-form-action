@@ -37,8 +37,6 @@ import { formAction } from "react-form-action";
 import { z } from "zod";
 import { cookies } from "next/headers";
 
-const emailSchema = z.object({ email: z.string().email() });
-
 const i18nMiddleware = async () => {
   const { t } = await useTranslation("auth", cookies().get("i18n")?.value);
   // will be added to context
@@ -46,7 +44,6 @@ const i18nMiddleware = async () => {
 };
 
 const authAction = formAction
-  .input(emailschema)
   .use(i18nMiddleware)
   .use(async ({ ctx: { t } }) =>
     console.log("🎉 context enhanced by previous middlewares 🎉", t)
@@ -61,24 +58,36 @@ const authAction = formAction
     }
   });
 
-export const resendVerifyEmailAction = authAction.run(
-  async ({ ctx: { t }, input: { email } }) => {
-    // do custom work
-    await db.resendVerificationEmail({ email });
-
-    // return translated success message
-    return t("verificationEmail.success");
-  }
-);
-
-export const signUp = authAction
-  // extend the input
+export const signIn = authAction
+  .input(z.object({ email: z.string().email() }))
+  // 🎉 extend the previous input (only without refinements and transforms)
   .input(z.object({ password: z.string() }))
   .run(async ({ ctx: { t }, input: { email, password } }) => {
-    // do custom work
-    await db.signupWithEmailAndPassword({ email, password });
+    // Type inferred: {email: string, password: string}
 
-    // return translated success message
+    await db.signIn({ email, password });
+
+    return t("verificationEmail.success");
+  });
+
+export const signUp = authAction
+  .input(
+    z
+      .object({
+        email: z.string().email(),
+        password: z.string(),
+        confirm: z.string(),
+      })
+      .refine((data) => data.password === data.confirm, {
+        message: "Passwords don't match",
+        path: ["confirm"],
+      })
+  ) // if using refinement, only one input call is permited, as schema with ZodEffects is not extendable.
+  .run(async ({ ctx: { t }, input: { email, password } }) => {
+    // 🎉 passwords match!
+
+    await db.signUp({ email, password });
+
     return t("signUp.success");
   });
 ```
