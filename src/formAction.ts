@@ -1,5 +1,17 @@
 import { z, ZodSchema, ZodUndefined } from "zod";
-import { createFormAction, FormState } from "./createFormAction";
+import {
+  createFormAction,
+  FailureState,
+  InvalidState,
+  SuccessState,
+  FormState,
+} from "./createFormAction";
+
+type Flatten<T> = Identity<{
+  [K in keyof T]: T[K];
+}>;
+
+type Identity<T> = T;
 
 type MiddlewareFn<
   Context,
@@ -34,13 +46,22 @@ type FormActionBuilder<
   run: Schema extends undefined
     ? <Data>(
         action: Action<Data, Context>
-      ) => (state: FormState<Data, Err>, payload: FormData) => Promise<Data>
+      ) => (
+        state: FormState<Data, Err>,
+        payload: FormData
+      ) => Promise<Flatten<FailureState<Err> | SuccessState<Data>>>
     : <Data>(
         action: SchemaAction<Data, Context, Schema>
       ) => (
         state: FormState<Data, Err, z.inferFlattenedErrors<Schema>>,
         payload: FormData
-      ) => Promise<Data>;
+      ) => Promise<
+        Flatten<
+          | InvalidState<z.inferFlattenedErrors<Schema>>
+          | FailureState<Err>
+          | SuccessState<Data>
+        >
+      >;
 
   /**
    * A chainable context enhancing helper.
