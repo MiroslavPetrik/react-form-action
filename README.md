@@ -22,7 +22,7 @@ End-to-end typesafe success, error & validation state control for Next.js 14 for
 ## Install
 
 ```
-npm i react-form-action
+npm i react-form-action zod-form-data
 ```
 
 ## Usage
