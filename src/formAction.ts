@@ -1,4 +1,4 @@
-import { z, ZodError, ZodSchema, ZodUndefined } from "zod";
+import { z, ZodSchema, ZodUndefined } from "zod";
 import { createFormAction, FormState } from "./createFormAction";
 
 type MiddlewareFn<
@@ -38,7 +38,7 @@ type FormActionBuilder<
     : <Data>(
         action: SchemaAction<Data, Context, Schema>
       ) => (
-        state: FormState<Data, Err, ZodErrorMessages<Schema>>,
+        state: FormState<Data, Err, z.inferFlattenedErrors<Schema>>,
         payload: FormData
       ) => Promise<Data>;
 
@@ -106,14 +106,14 @@ export function formAction<
     });
 
   const runSchema = <Data>(action: SchemaAction<Data, Context, Schema>) => {
-    return createFormAction<Data, Err, ZodErrorMessages<Schema>>(
+    return createFormAction<Data, Err, z.inferFlattenedErrors<Schema>>(
       ({ success, failure, invalid }) => {
         return async (state, formData) => {
           const ctx = await createContext(formData);
           const result = schema!.safeParse(formData);
 
           if (!result.success) {
-            return invalid(getZodErrorMessages<Schema>(result.error));
+            return invalid(result.error.flatten());
           }
 
           const input = result.data as z.infer<Schema>;
@@ -149,14 +149,3 @@ export function formAction<
     },
   } as FormActionBuilder<Schema, Err, Context>;
 }
-
-type ZodErrorMessages<Schema extends ZodSchema> = {
-  [k in keyof z.infer<Schema>]?: string;
-};
-
-const getZodErrorMessages = <Schema extends ZodSchema>(
-  error: ZodError
-): ZodErrorMessages<Schema> =>
-  error.errors.reduce((all, { message, path }) => {
-    return { ...all, [path[0]!]: message };
-  }, {});

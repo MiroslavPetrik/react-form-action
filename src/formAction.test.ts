@@ -153,7 +153,10 @@ describe("formAction", () => {
         expect(result).toHaveProperty("data", null);
         expect(result).toHaveProperty("error", null);
         expect(result).toHaveProperty("validationError", {
-          allright: "Invalid input",
+          fieldErrors: {
+            allright: ["Invalid input"],
+          },
+          formErrors: [],
         });
       });
     });
