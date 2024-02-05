@@ -1,11 +1,12 @@
 import { it, describe, vi, expect } from "vitest";
-import { zfd } from "zod-form-data";
+import { z } from "zod";
 import { formAction } from "./formAction";
 import { initial } from "./Form";
+import { zfd } from "zod-form-data";
 
 describe("formAction", () => {
   it("works", async () => {
-    const result = await formAction().run(async () => 42)(
+    const result = await formAction.run(async () => 42)(
       // @ts-expect-error undefined is ok, we don't use initial state
       undefined,
       undefined
@@ -17,7 +18,7 @@ describe("formAction", () => {
   });
 
   it("rethrows unhandled error", async () => {
-    const action = formAction().run<null>(async () => {
+    const action = formAction.run<null>(async () => {
       throw new Error();
     });
 
@@ -28,7 +29,7 @@ describe("formAction", () => {
 
   describe("error handling with .error()", () => {
     it("returns failure type", async () => {
-      const withErrorHandler = formAction().error(({ error }) => {
+      const withErrorHandler = formAction.error(({ error }) => {
         if (error instanceof Error) {
           return error.message;
         } else {
@@ -56,7 +57,7 @@ describe("formAction", () => {
     });
 
     it("has access to context", async () => {
-      const protectedAction = formAction()
+      const protectedAction = formAction
         .use(async () => {
           const authorized = false;
 
@@ -86,7 +87,7 @@ describe("formAction", () => {
       const handler = vi.fn(async () => {});
 
       const formData = new FormData();
-      await formAction().run(handler)(
+      await formAction.run(handler)(
         // @ts-expect-error undefined is ok, we don't use initial state
         undefined,
         formData
@@ -97,7 +98,7 @@ describe("formAction", () => {
 
     describe("extending context with .use(middleware)", () => {
       it("aggregates the properties", async () => {
-        const contextual = formAction()
+        const contextual = formAction
           .use(async () => ({ a: 1 }))
           .use(async ({ ctx }) => ({ b: "g", c: ctx.a * 3 }));
 
@@ -111,9 +112,9 @@ describe("formAction", () => {
     });
   });
 
-  describe("with schema", () => {
-    const action = formAction(
-      zfd.formData({
+  describe("with input", () => {
+    const action = formAction.input(
+      z.object({
         allright: zfd.checkbox(),
       })
     );
@@ -159,6 +160,28 @@ describe("formAction", () => {
           formErrors: [],
         });
       });
+    });
+
+    it("it aggregates input", async () => {
+      const foo = action.input(z.object({ age: zfd.numeric() }));
+
+      const formData = new FormData();
+      formData.set("allright", "on");
+      formData.set("age", "42");
+
+      const result = await foo.run(
+        async ({ input: { age, allright } }) =>
+          `You are ${age} y.o. and feeling ${allright ? "ok" : "ko"}`
+      )(
+        // @ts-expect-error undefined is ok
+        undefined,
+        formData
+      );
+
+      expect(result).toHaveProperty("type", "success");
+      expect(result).toHaveProperty("data", "You are 42 y.o. and feeling ok");
+      expect(result).toHaveProperty("error", null);
+      expect(result).toHaveProperty("validationError", null);
     });
   });
 });

@@ -28,7 +28,8 @@ const i18nMiddleware = async () => {
   return { t };
 };
 
-const authAction = formAction(emailSchema)
+const authAction = formAction
+  .input(emailschema)
   .use(i18nMiddleware)
   .use(async ({ ctx: { t } }) =>
     console.log("🎉 context enhanced by previous middlewares 🎉", t)
@@ -53,15 +54,16 @@ export const resendVerifyEmailAction = authAction.run(
   }
 );
 
-export const sendResetPasswordEmail = authAction.run(
-  async ({ ctx: { t }, input: { email } }) => {
+export const signUp = authAction
+  // extend the input
+  .input(z.object({ password: z.string() }))
+  .run(async ({ ctx: { t }, input: { email, password } }) => {
     // do custom work
-    await db.emailPasswordSendPasswordResetEmail({ email });
+    await db.signupWithEmailAndPassword({ email, password });
 
     // return translated success message
-    return t("resetPasswordEmail.success");
-  }
-);
+    return t("signUp.success");
+  });
 ```
 
 ### Server Action (usable in Next.js)

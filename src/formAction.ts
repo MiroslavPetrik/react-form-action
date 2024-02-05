@@ -1,4 +1,4 @@
-import { z, ZodSchema, ZodUndefined } from "zod";
+import { z, type objectUtil, ZodObject, ZodRawShape, ZodSchema } from "zod";
 import {
   createFormAction,
   FailureState,
@@ -6,6 +6,7 @@ import {
   SuccessState,
   FormState,
 } from "./createFormAction";
+import { zfd } from "zod-form-data";
 
 type Flatten<T> = Identity<{
   [K in keyof T]: T[K];
@@ -33,11 +34,20 @@ type SchemaAction<Data, Context, Schema extends ZodSchema> = (params: {
   input: z.infer<Schema>;
 }) => Promise<Data>;
 
+type EmptyZodObject = ZodObject<ZodRawShape>;
+
 type FormActionBuilder<
-  Schema extends ZodSchema = ZodUndefined,
+  Schema extends EmptyZodObject,
   Err = Error,
   Context = InitialContext
 > = {
+  input: <T extends ZodRawShape>(
+    schema: ZodObject<T>
+  ) => FormActionBuilder<
+    ZodObject<objectUtil.extendShape<T, Schema["shape"]>>,
+    Err,
+    Context
+  >;
   /**
    * A finishing call on the builder completing your action.
    * @param action async function to execute. It will receive parsed formData as input, when the builder was initialized with a schema.
@@ -62,7 +72,6 @@ type FormActionBuilder<
           | SuccessState<Data>
         >
       >;
-
   /**
    * A chainable context enhancing helper.
    * @param middleware A function which receives the current context, and returns an object which will be added to the context.
@@ -82,13 +91,14 @@ type FormActionBuilder<
   ) => FormActionBuilder<Schema, Err, Context>;
 };
 
-export function formAction<
-  Schema extends ZodSchema = ZodUndefined,
+function formActionBuilder<
+  Input extends ZodRawShape,
+  Schema extends EmptyZodObject = ZodObject<Input>,
   Err = Error,
   Context = InitialContext,
   NewContext extends Record<string, unknown> = Record<string, unknown>
 >(
-  schema?: Schema,
+  schema: Schema,
   /**
    * @private
    */
@@ -129,9 +139,11 @@ export function formAction<
   const runSchema = <Data>(action: SchemaAction<Data, Context, Schema>) => {
     return createFormAction<Data, Err, z.inferFlattenedErrors<Schema>>(
       ({ success, failure, invalid }) => {
+        const formDataSchema = zfd.formData(schema);
+
         return async (state, formData) => {
           const ctx = await createContext(formData);
-          const result = schema!.safeParse(formData);
+          const result = formDataSchema.safeParse(formData);
 
           if (!result.success) {
             return invalid(result.error.flatten());
@@ -154,19 +166,35 @@ export function formAction<
   };
 
   return {
-    run: schema ? runSchema : run,
+    input<T extends ZodRawShape>(newInput: ZodObject<T>) {
+      const merged = schema.merge(newInput);
+
+      return formActionBuilder<
+        (typeof merged)["shape"],
+        typeof merged,
+        Err,
+        Context & NewContext
+      >(merged, middleware);
+    },
     use<NewContext extends Record<string, unknown>>(
       newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
     ) {
-      return formAction<Schema, Err, Context & NewContext>(schema, [
-        ...middleware,
-        newMiddleware,
-      ]);
+      return formActionBuilder<Input, Schema, Err, Context & NewContext>(
+        schema,
+        [...middleware, newMiddleware]
+      );
     },
     error<Err>(
       processError: (params: { error: unknown; ctx: Context }) => Err
     ) {
-      return formAction<Schema, Err, Context>(schema, middleware, processError);
+      return formActionBuilder<Input, Schema, Err, Context>(
+        schema,
+        middleware,
+        processError
+      );
     },
+    run: Object.keys(schema.shape).length === 0 ? run : runSchema,
   } as FormActionBuilder<Schema, Err, Context>;
 }
+
+export const formAction = formActionBuilder(z.object({}));

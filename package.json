@@ -43,7 +43,8 @@
   "peerDependencies": {
     "react": ">=18.2",
     "react-dom": ">=18.2",
-    "zod": "^3"
+    "zod": "^3",
+    "zod-form-data": "^2"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
