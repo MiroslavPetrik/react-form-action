@@ -2,6 +2,23 @@
 
 End-to-end typesafe success, error & validation state control for Next.js 14 form actions.
 
+## Features
+
+**Action Creator**
+
+- ✅ Provides `"invalid" | "success" | "failure"` response objects.
+- ✅ Define generic payload for each of the response type.
+
+**Form Action builder**
+
+- ✅ tRPC-like builder API for `.input(zodSchema)` & context `.use(middleware)`
+- ✅ Parses `formData` with [`zod-form-data`](https://www.npmjs.com/package/zod-form-data)
+
+**Stateful `<Form />`**
+
+- ✅ `<Form />` component reads the action's response.
+- ✅ Computes progress meta-state like `isInvalid`, `isSuccess` and more.
+
 ## Install
 
 ```
