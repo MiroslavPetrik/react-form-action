@@ -33,7 +33,7 @@ const authAction = formAction(emailSchema)
   .use(async ({ ctx: { t } }) =>
     console.log("🎉 context enhanced by previous middlewares 🎉", t)
   )
-  .error((error) => {
+  .error(({ error }) => {
     if (error instanceof DbError) {
       return error.custom.code;
     } else {

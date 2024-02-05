@@ -26,29 +26,59 @@ describe("formAction", () => {
     ).rejects.toThrowError();
   });
 
-  it("return failure type when .error() is used", async () => {
-    const withErrorHandler = formAction().error((err) => {
-      if (err instanceof Error) {
-        return err.message;
-      } else {
-        return "unknown";
-      }
+  describe("error handling with .error()", () => {
+    it("returns failure type", async () => {
+      const withErrorHandler = formAction().error(({ error }) => {
+        if (error instanceof Error) {
+          return error.message;
+        } else {
+          return "unknown";
+        }
+      });
+
+      const throwsError = withErrorHandler.run<null>(async () => {
+        throw new Error("whopsie");
+      });
+
+      const failedWithError = await throwsError(initial(null), new FormData());
+      expect(failedWithError).toHaveProperty("type", "failure");
+      expect(failedWithError).toHaveProperty("error", "whopsie");
+
+      const throwsNumber = withErrorHandler.run<null>(async () => {
+        throw 42;
+      });
+      const failedWithNumber = await throwsNumber(
+        initial(null),
+        new FormData()
+      );
+      expect(failedWithNumber).toHaveProperty("type", "failure");
+      expect(failedWithNumber).toHaveProperty("error", "unknown");
     });
 
-    const throwsError = withErrorHandler.run<null>(async () => {
-      throw new Error("whopsie");
-    });
+    it("has access to context", async () => {
+      const protectedAction = formAction()
+        .use(async () => {
+          const authorized = false;
 
-    const failedWithError = await throwsError(initial(null), new FormData());
-    expect(failedWithError).toHaveProperty("type", "failure");
-    expect(failedWithError).toHaveProperty("error", "whopsie");
+          return { authorized };
+        })
+        .error(({ ctx }) => {
+          if (!ctx.authorized) {
+            return "unauthorized";
+          } else {
+            return "unknown";
+          }
+        });
 
-    const throwsNumber = withErrorHandler.run<null>(async () => {
-      throw 2;
+      const throws = protectedAction.run<null>(async () => {
+        throw new Error();
+      });
+
+      const failedUnauthorized = await throws(initial(null), new FormData());
+
+      expect(failedUnauthorized).toHaveProperty("type", "failure");
+      expect(failedUnauthorized).toHaveProperty("error", "unauthorized");
     });
-    const failedWithNumber = await throwsNumber(initial(null), new FormData());
-    expect(failedWithNumber).toHaveProperty("type", "failure");
-    expect(failedWithNumber).toHaveProperty("error", "unknown");
   });
 
   describe("context", () => {

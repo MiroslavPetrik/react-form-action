@@ -57,7 +57,7 @@ type FormActionBuilder<
    * @returns FormActionBuilder
    */
   error: <Err>(
-    processError: (error: unknown) => Err
+    processError: (params: { error: unknown; ctx: Context }) => Err
   ) => FormActionBuilder<Schema, Err, Context>;
 };
 
@@ -75,7 +75,7 @@ export function formAction<
   /**
    * @private
    */
-  processError?: (error: unknown) => Err
+  processError?: (params: { error: unknown; ctx: Context }) => Err
 ): FormActionBuilder<Schema, Err, Context> {
   async function createContext(formData: FormData) {
     let ctx = { formData } as Context;
@@ -97,7 +97,7 @@ export function formAction<
           return success(await (action as Action<Data, Context>)({ ctx }));
         } catch (error) {
           if (processError) {
-            return failure(processError(error));
+            return failure(processError({ error, ctx }));
           }
           // must be handled by error boundary
           throw error;
@@ -122,7 +122,7 @@ export function formAction<
             return success(await action({ input, ctx }));
           } catch (error) {
             if (processError) {
-              return failure(processError(error));
+              return failure(processError({ error, ctx }));
             }
             // must be handled by error boundary
             throw error;
@@ -142,7 +142,9 @@ export function formAction<
         newMiddleware,
       ]);
     },
-    error<Err>(processError: (error: unknown) => Err) {
+    error<Err>(
+      processError: (params: { error: unknown; ctx: Context }) => Err
+    ) {
       return formAction<Schema, Err, Context>(schema, middleware, processError);
     },
   } as FormActionBuilder<Schema, Err, Context>;
