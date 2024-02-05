@@ -70,9 +70,7 @@ export const signIn = authAction
     return t("verificationEmail.success");
   });
 
-import { formAction } from "react-fomr-action";
-
-export const signUp = formAction
+export const signUp = authAction
   .input(
     z
       .object({
@@ -88,9 +86,13 @@ export const signUp = formAction
   .run(async ({ ctx: { t }, input: { email, password } }) => {
     // 🎉 passwords match!
 
-    await db.signUp({ email, password });
+    const tokenData = await db.signUp({ email, password });
 
-    return "We've sent you an email!";
+    if (!tokenData) {
+      return t("signUp.emailVerificationRequired");
+    }
+
+    return t("singUp.success");
   });
 ```
 
