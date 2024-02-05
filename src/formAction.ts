@@ -201,7 +201,8 @@ function formActionBuilder<
       if (schema === emptyInput) {
         return formActionBuilder<T, Err, Context & NewContext>(
           newInput,
-          middleware
+          middleware,
+          processError
         );
       } else if (schema._def.effect) {
         throw new Error(
@@ -228,10 +229,11 @@ function formActionBuilder<
     use<NewContext extends Record<string, unknown>>(
       newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
     ) {
-      return formActionBuilder<Schema, Err, Context & NewContext>(schema, [
-        ...middleware,
-        newMiddleware,
-      ]);
+      return formActionBuilder<Schema, Err, Context & NewContext>(
+        schema,
+        [...middleware, newMiddleware],
+        processError
+      );
     },
     error<Err>(
       processError: (params: { error: unknown; ctx: Context }) => Err

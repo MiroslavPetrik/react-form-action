@@ -70,7 +70,9 @@ export const signIn = authAction
     return t("verificationEmail.success");
   });
 
-export const signUp = authAction
+import { formAction } from "react-fomr-action";
+
+export const signUp = formAction
   .input(
     z
       .object({
@@ -88,7 +90,7 @@ export const signUp = authAction
 
     await db.signUp({ email, password });
 
-    return t("signUp.success");
+    return "We've sent you an email!";
   });
 ```
 
