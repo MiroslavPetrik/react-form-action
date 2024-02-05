@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "vitest --typecheck"
   },
   "exports": {
     ".": {

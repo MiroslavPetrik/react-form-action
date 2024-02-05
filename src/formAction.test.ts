@@ -1,5 +1,12 @@
 import { it, describe, vi, expect } from "vitest";
-import { z } from "zod";
+import {
+  AnyZodObject,
+  ZodEffects,
+  ZodObject,
+  ZodType,
+  ZodTypeAny,
+  z,
+} from "zod";
 import { formAction } from "./formAction";
 import { initial } from "./Form";
 import { zfd } from "zod-form-data";
@@ -42,6 +49,7 @@ describe("formAction", () => {
       });
 
       const failedWithError = await throwsError(initial(null), new FormData());
+
       expect(failedWithError).toHaveProperty("type", "failure");
       expect(failedWithError).toHaveProperty("error", "whopsie");
 
@@ -182,6 +190,38 @@ describe("formAction", () => {
       expect(result).toHaveProperty("data", "You are 42 y.o. and feeling ok");
       expect(result).toHaveProperty("error", null);
       expect(result).toHaveProperty("validationError", null);
+    });
+
+    it("works with refinement", async () => {
+      const passwordForm = z
+        .object({
+          password: z.string(),
+          confirm: z.string(),
+        })
+        .refine((data) => data.password === data.confirm, {
+          message: "Passwords don't match",
+          path: ["confirm"],
+        });
+
+      const formData = new FormData();
+      formData.set("password", "nbusr123");
+      formData.set("confirm", "deusvult");
+
+      const result = await formAction
+        .input(passwordForm)
+        .run(async ({ input }) => {})(
+        // @ts-expect-error
+        undefined,
+        formData
+      );
+
+      expect(result).toHaveProperty("validationError", {
+        fieldErrors: {
+          confirm: ["Passwords don't match"],
+        },
+        formErrors: [],
+      });
+      expect(result).toHaveProperty("error", null);
     });
   });
 });

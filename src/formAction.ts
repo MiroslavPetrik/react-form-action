@@ -1,4 +1,13 @@
-import { z, type objectUtil, ZodObject, ZodRawShape, ZodSchema } from "zod";
+import { z, ZodFirstPartyTypeKind } from "zod";
+import type {
+  ZodType,
+  ZodTypeAny,
+  objectUtil,
+  ZodObject,
+  ZodRawShape,
+  ZodSchema,
+  ZodEffects,
+} from "zod";
 import {
   createFormAction,
   FailureState,
@@ -7,6 +16,10 @@ import {
   FormState,
 } from "./createFormAction";
 import { zfd } from "zod-form-data";
+
+const emptyInput = Symbol();
+
+type EmptyInput = typeof emptyInput;
 
 type Flatten<T> = Identity<{
   [K in keyof T]: T[K];
@@ -36,15 +49,32 @@ type SchemaAction<Data, Context, Schema extends ZodSchema> = (params: {
 
 type EmptyZodObject = ZodObject<ZodRawShape>;
 
+type AnyZodEffects = ZodEffects<any, any, any>;
+
 type FormActionBuilder<
-  Schema extends EmptyZodObject,
+  Schema extends ZodTypeAny | EmptyInput,
   Err = Error,
   Context = InitialContext
 > = {
-  input: <T extends ZodRawShape>(
-    schema: ZodObject<T>
+  input: <T extends ZodTypeAny>(
+    newInput: T extends ZodType<infer Out extends Record<string, unknown>>
+      ? Schema extends AnyZodEffects
+        ? "Extending schema with effect is not possible."
+        : Schema extends EmptyInput
+        ? T // valid initial schema, possibly with effects
+        : Schema extends ZodTypeAny
+        ? T extends AnyZodEffects
+          ? "Your input contains effect which prevents merging it with the previous inputs."
+          : T
+        : T
+      : "The schema output must be an object."
   ) => FormActionBuilder<
-    ZodObject<objectUtil.extendShape<T, Schema["shape"]>>,
+    Schema extends ZodObject<infer O1 extends ZodRawShape>
+      ? // merging won't work for effects, but that is sanitized in input parameter
+        T extends ZodObject<infer O2 extends ZodRawShape>
+        ? ZodObject<objectUtil.extendShape<O1, O2>>
+        : never
+      : T,
     Err,
     Context
   >;
@@ -53,14 +83,8 @@ type FormActionBuilder<
    * @param action async function to execute. It will receive parsed formData as input, when the builder was initialized with a schema.
    * @returns runnable server action exportable from a module.
    */
-  run: Schema extends undefined
+  run: Schema extends ZodTypeAny
     ? <Data>(
-        action: Action<Data, Context>
-      ) => (
-        state: FormState<Data, Err>,
-        payload: FormData
-      ) => Promise<Flatten<FailureState<Err> | SuccessState<Data>>>
-    : <Data>(
         action: SchemaAction<Data, Context, Schema>
       ) => (
         state: FormState<Data, Err, z.inferFlattenedErrors<Schema>>,
@@ -71,7 +95,13 @@ type FormActionBuilder<
           | FailureState<Err>
           | SuccessState<Data>
         >
-      >;
+      >
+    : <Data>(
+        action: Action<Data, Context>
+      ) => (
+        state: FormState<Data, Err>,
+        payload: FormData
+      ) => Promise<Flatten<FailureState<Err> | SuccessState<Data>>>;
   /**
    * A chainable context enhancing helper.
    * @param middleware A function which receives the current context, and returns an object which will be added to the context.
@@ -92,20 +122,13 @@ type FormActionBuilder<
 };
 
 function formActionBuilder<
-  Input extends ZodRawShape,
-  Schema extends EmptyZodObject = ZodObject<Input>,
+  Schema extends ZodTypeAny | EmptyInput,
   Err = Error,
   Context = InitialContext,
   NewContext extends Record<string, unknown> = Record<string, unknown>
 >(
   schema: Schema,
-  /**
-   * @private
-   */
   middleware: MiddlewareFn<Context, NewContext>[] = [],
-  /**
-   * @private
-   */
   processError?: (params: { error: unknown; ctx: Context }) => Err
 ): FormActionBuilder<Schema, Err, Context> {
   async function createContext(formData: FormData) {
@@ -136,65 +159,91 @@ function formActionBuilder<
       };
     });
 
-  const runSchema = <Data>(action: SchemaAction<Data, Context, Schema>) => {
-    return createFormAction<Data, Err, z.inferFlattenedErrors<Schema>>(
-      ({ success, failure, invalid }) => {
-        const formDataSchema = zfd.formData(schema);
+  // hotfix
+  type RealSchema = Exclude<Schema, EmptyInput>;
 
-        return async (state, formData) => {
-          const ctx = await createContext(formData);
-          const result = formDataSchema.safeParse(formData);
+  const runSchema =
+    schema === emptyInput
+      ? undefined
+      : <Data>(action: SchemaAction<Data, Context, RealSchema>) => {
+          return createFormAction<
+            Data,
+            Err,
+            z.inferFlattenedErrors<RealSchema>
+          >(({ success, failure, invalid }) => {
+            const formDataSchema = zfd.formData(schema);
 
-          if (!result.success) {
-            return invalid(result.error.flatten());
-          }
+            return async (state, formData) => {
+              const ctx = await createContext(formData);
+              const result = formDataSchema.safeParse(formData);
 
-          const input = result.data as z.infer<Schema>;
+              if (!result.success) {
+                return invalid(result.error.flatten());
+              }
 
-          try {
-            return success(await action({ input, ctx }));
-          } catch (error) {
-            if (processError) {
-              return failure(processError({ error, ctx }));
-            }
-            // must be handled by error boundary
-            throw error;
-          }
+              const input = result.data as z.infer<RealSchema>;
+
+              try {
+                return success(await action({ input, ctx }));
+              } catch (error) {
+                if (processError) {
+                  return failure(processError({ error, ctx }));
+                }
+                // must be handled by error boundary
+                throw error;
+              }
+            };
+          });
         };
-      }
-    );
-  };
 
   return {
-    input<T extends ZodRawShape>(newInput: ZodObject<T>) {
-      const merged = schema.merge(newInput);
+    input<T extends ZodTypeAny>(newInput: T) {
+      if (schema === emptyInput) {
+        return formActionBuilder<T, Err, Context & NewContext>(
+          newInput,
+          middleware
+        );
+      } else if (schema._def.effect) {
+        throw new Error(
+          "Previous input is not augmentable because it contains an effect."
+        );
+      } else if (newInput._def.effect) {
+        throw new Error(
+          "Your input contains effect which prevents merging it with the previous inputs."
+        );
+      } else if (schema._def.typeName === ZodFirstPartyTypeKind.ZodObject) {
+        // @ts-ignore
+        const merged = schema.merge(newInput);
 
-      return formActionBuilder<
-        (typeof merged)["shape"],
-        typeof merged,
-        Err,
-        Context & NewContext
-      >(merged, middleware);
+        return formActionBuilder<typeof merged, Err, Context & NewContext>(
+          merged,
+          middleware
+        );
+      } else {
+        throw Error(
+          "Merging inputs works only for object schemas without effects."
+        );
+      }
     },
     use<NewContext extends Record<string, unknown>>(
       newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
     ) {
-      return formActionBuilder<Input, Schema, Err, Context & NewContext>(
-        schema,
-        [...middleware, newMiddleware]
-      );
+      return formActionBuilder<Schema, Err, Context & NewContext>(schema, [
+        ...middleware,
+        newMiddleware,
+      ]);
     },
     error<Err>(
       processError: (params: { error: unknown; ctx: Context }) => Err
     ) {
-      return formActionBuilder<Input, Schema, Err, Context>(
+      return formActionBuilder<Schema, Err, Context>(
         schema,
         middleware,
         processError
       );
     },
-    run: Object.keys(schema.shape).length === 0 ? run : runSchema,
+    run: schema === emptyInput ? run : runSchema,
   } as FormActionBuilder<Schema, Err, Context>;
 }
 
-export const formAction = formActionBuilder(z.object({}));
+export const formAction = formActionBuilder(emptyInput);
