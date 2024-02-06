@@ -52,4 +52,61 @@ describe("formAction.input", () => {
       );
     });
   });
+
+  describe("result types", () => {
+    const handled = formAction.error(() => {
+      return { code: "red" } as const;
+    });
+
+    test("without validation", () => {
+      const noInputAction = handled.run(async () => {});
+
+      expectTypeOf<typeof noInputAction>().returns.resolves.toMatchTypeOf<
+        | {
+            type: "failure";
+            data: null;
+            error: {
+              code: "red";
+            };
+            validationError: null;
+          }
+        | {
+            type: "success";
+            data: void;
+            error: null;
+            validationError: null;
+          }
+      >();
+    });
+
+    describe("with schema validation", () => {
+      const schema = z.object({ name: z.string() });
+      const inputAction = handled.input(schema);
+
+      const action = inputAction.run(async () => {});
+
+      expectTypeOf<typeof action>().returns.resolves.toMatchTypeOf<
+        | {
+            type: "failure";
+            data: null;
+            error: {
+              code: "red";
+            };
+            validationError: null;
+          }
+        | {
+            type: "success";
+            data: void;
+            error: null;
+            validationError: null;
+          }
+        | {
+            type: "invalid";
+            data: null;
+            error: null;
+            validationError: z.inferFlattenedErrors<typeof schema>;
+          }
+      >();
+    });
+  });
 });

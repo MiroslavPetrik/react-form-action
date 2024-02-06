@@ -12,11 +12,11 @@ import type {
 import { useFormState } from "react-dom";
 import { FormStatus } from "./FormStatus";
 
-type FormStateProps<Data, ValidationError, Error, Payload> = {
+export type FormStateProps<Data, Error, ValidationError, Payload> = {
   action: (
-    state: FormState<Data, ValidationError, Error>,
+    state: FormState<Data, Error, ValidationError>,
     payload: Payload
-  ) => Promise<FormState<Data, ValidationError, Error>>;
+  ) => Promise<FormState<Data, Error, ValidationError>>;
   initialData: Data;
   permalink?: string;
 };
@@ -28,25 +28,30 @@ export function initial<Data>(data: Data): InitialState<Data> {
 type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T & {
   isPending: boolean;
   isInitial: T["type"] extends "initial" ? true : false;
+  isInvalid: T["type"] extends "invalid" ? true : false;
   isFailure: T["type"] extends "failure" ? true : false;
   isSuccess: T["type"] extends "success" ? true : false;
-  isInvalid: T["type"] extends "invalid" ? true : false;
 };
 
-export function Form<Data, ValidationError, Error>({
+export type FormProps<Data, Error, ValidationError> = Omit<
+  FormHTMLAttributes<HTMLFormElement>,
+  "action" | "children"
+> &
+  FormStateProps<Data, Error, ValidationError, FormData> &
+  RenderProp<
+    | FormMetaState<InitialState<Data>>
+    | FormMetaState<InvalidState<ValidationError>>
+    | FormMetaState<FailureState<Error>>
+    | FormMetaState<SuccessState<Data>>
+  >;
+
+export function Form<Data, Error, ValidationError>({
   children,
   action,
   initialData,
   permalink,
   ...props
-}: Omit<FormHTMLAttributes<HTMLFormElement>, "action" | "children"> &
-  FormStateProps<Data, ValidationError, Error, FormData> &
-  RenderProp<
-    | FormMetaState<InitialState<Data>>
-    | FormMetaState<InvalidState<Error>>
-    | FormMetaState<FailureState<Error>>
-    | FormMetaState<SuccessState<Data>>
-  >) {
+}: FormProps<Data, Error, ValidationError>) {
   const [state, formAction] = useFormState(
     action,
     initial(initialData),

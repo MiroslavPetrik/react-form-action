@@ -25,6 +25,10 @@ End-to-end typesafe success, error & validation state control for Next.js 14 for
 npm i react-form-action zod-form-data
 ```
 
+<a aria-label="NPM version" href="https://www.npmjs.com/package/react-form-action">
+  <img alt="NPM Version" src="https://img.shields.io/npm/v/react-form-action?style=for-the-badge&labelColor=24292e">
+</a>
+
 ## Usage
 
 ### `formAction` builder

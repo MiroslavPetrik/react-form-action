@@ -47,8 +47,6 @@ type SchemaAction<Data, Context, Schema extends ZodSchema> = (params: {
   input: z.infer<Schema>;
 }) => Promise<Data>;
 
-type EmptyZodObject = ZodObject<ZodRawShape>;
-
 type AnyZodEffects = ZodEffects<any, any, any>;
 
 type FormActionBuilder<
