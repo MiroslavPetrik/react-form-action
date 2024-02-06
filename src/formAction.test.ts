@@ -128,22 +128,30 @@ describe("formAction", () => {
     );
 
     describe("formData parsing", () => {
-      const feeling = action.run(async ({ input: { allright } }) =>
-        allright ? "OK" : "KO"
-      );
+      const nestedObjectInput = action
+        .input(
+          z.object({
+            user: z.object({ name: z.string().min(3) }),
+          })
+        )
+        .run(async ({ input }) => input);
 
       it("has success type when formData match schema", async () => {
         const formData = new FormData();
         formData.set("allright", "on");
+        formData.set("user.name", "Patrick");
 
-        const result = await feeling(
+        const result = await nestedObjectInput(
           // @ts-expect-error undefined is ok
           undefined,
           formData
         );
 
         expect(result).toHaveProperty("type", "success");
-        expect(result).toHaveProperty("data", "OK");
+        expect(result).toHaveProperty("data", {
+          allright: true,
+          user: { name: "Patrick" },
+        });
         expect(result).toHaveProperty("error", null);
         expect(result).toHaveProperty("validationError", null);
       });
@@ -151,8 +159,9 @@ describe("formAction", () => {
       it("has invalid type when formData don't match schema", async () => {
         const formData = new FormData();
         formData.set("allright", "9");
+        formData.set("user.name", "Pa");
 
-        const result = await feeling(
+        const result = await nestedObjectInput(
           // @ts-expect-error undefined is ok
           undefined,
           formData
@@ -164,6 +173,7 @@ describe("formAction", () => {
         expect(result).toHaveProperty("validationError", {
           fieldErrors: {
             allright: ["Invalid input"],
+            user: ["String must contain at least 3 character(s)"],
           },
           formErrors: [],
         });
