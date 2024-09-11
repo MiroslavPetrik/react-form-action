@@ -42,14 +42,14 @@
   "author": "Miroslav Petrik",
   "license": "MIT",
   "peerDependencies": {
-    "react": ">=18.2",
-    "react-dom": ">=18.2",
+    "react": ">=18.3",
+    "react-dom": ">=18.3",
     "zod": "^3",
     "zod-form-data": "^2"
   },
   "devDependencies": {
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
     "next": "^14.0.2",
     "react-render-prop-type": "^0.1.0",
     "tsup": "^7.2.0",

@@ -9,7 +9,7 @@ import type {
   FailureState,
   SuccessState,
 } from "./createFormAction";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { FormStatus } from "./FormStatus";
 
 export type FormStateProps<Data, Error, ValidationError, Payload> = {
@@ -52,7 +52,7 @@ export function Form<Data, Error, ValidationError>({
   permalink,
   ...props
 }: FormProps<Data, Error, ValidationError>) {
-  const [state, formAction] = useFormState(
+  const [state, formAction] = useActionState(
     action,
     initial(initialData),
     permalink
