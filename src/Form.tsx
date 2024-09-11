@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import type { FormHTMLAttributes } from "react";
 import type { RenderProp } from "react-render-prop-type";
@@ -25,13 +26,19 @@ export function initial<Data>(data: Data): InitialState<Data> {
   return { type: "initial", data, error: null, validationError: null };
 }
 
-type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T & {
-  isPending: boolean;
-  isInitial: T["type"] extends "initial" ? true : false;
-  isInvalid: T["type"] extends "invalid" ? true : false;
-  isFailure: T["type"] extends "failure" ? true : false;
-  isSuccess: T["type"] extends "success" ? true : false;
+type FormStatusFlags<
+  T extends FormState<unknown, unknown, unknown>["type"] | unknown = unknown
+> = {
+  isInitial: T extends "initial" ? true : false;
+  isInvalid: T extends "invalid" ? true : false;
+  isFailure: T extends "failure" ? true : false;
+  isSuccess: T extends "success" ? true : false;
 };
+
+type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T &
+  FormStatusFlags<T["type"]> & {
+    isPending: boolean;
+  };
 
 export type FormProps<Data, Error, ValidationError> = Omit<
   FormHTMLAttributes<HTMLFormElement>,
@@ -44,6 +51,13 @@ export type FormProps<Data, Error, ValidationError> = Omit<
     | FormMetaState<FailureState<Error>>
     | FormMetaState<SuccessState<Data>>
   >;
+
+const neverMetaState: FormStatusFlags = {
+  isInitial: false,
+  isInvalid: false,
+  isFailure: false,
+  isSuccess: false,
+};
 
 export function Form<Data, Error, ValidationError>({
   children,
@@ -58,18 +72,22 @@ export function Form<Data, Error, ValidationError>({
     permalink
   );
 
+  const metaState =
+    state.type === "initial"
+      ? { ...state, ...neverMetaState, isInitial: true as const }
+      : state.type === "invalid"
+      ? { ...state, ...neverMetaState, isInvalid: true as const }
+      : state.type === "failure"
+      ? { ...state, ...neverMetaState, isFailure: true as const }
+      : { ...state, ...neverMetaState, isSuccess: true as const };
+
   return (
     <form action={formAction} {...props}>
       <FormStatus>
         {({ pending }) =>
-          // @ts-expect-error unnarrowed booleans
           children({
-            ...state,
+            ...metaState,
             isPending: pending,
-            isInitial: state.type === "initial",
-            isInvalid: state.type === "invalid",
-            isFailure: state.type === "failure",
-            isSuccess: state.type === "success",
           })
         }
       </FormStatus>
