@@ -16,7 +16,7 @@ describe("formAction", () => {
     const result = await formAction.run(async () => 42)(
       // @ts-expect-error undefined is ok, we don't use initial state
       undefined,
-      undefined
+      undefined,
     );
 
     expect(result).toHaveProperty("type", "success");
@@ -30,7 +30,7 @@ describe("formAction", () => {
     });
 
     await expect(() =>
-      action(initial(null), new FormData())
+      action(initial(null), new FormData()),
     ).rejects.toThrowError();
   });
 
@@ -58,7 +58,7 @@ describe("formAction", () => {
       });
       const failedWithNumber = await throwsNumber(
         initial(null),
-        new FormData()
+        new FormData(),
       );
       expect(failedWithNumber).toHaveProperty("type", "failure");
       expect(failedWithNumber).toHaveProperty("error", "unknown");
@@ -98,7 +98,7 @@ describe("formAction", () => {
       await formAction.run(handler)(
         // @ts-expect-error undefined is ok, we don't use initial state
         undefined,
-        formData
+        formData,
       );
 
       expect(handler).toBeCalledWith({ ctx: { formData } });
@@ -124,7 +124,7 @@ describe("formAction", () => {
     const action = formAction.input(
       z.object({
         allright: zfd.checkbox(),
-      })
+      }),
     );
 
     describe("formData parsing", () => {
@@ -132,7 +132,7 @@ describe("formAction", () => {
         .input(
           z.object({
             user: z.object({ name: z.string().min(3) }),
-          })
+          }),
         )
         .run(async ({ input }) => input);
 
@@ -144,7 +144,7 @@ describe("formAction", () => {
         const result = await nestedObjectInput(
           // @ts-expect-error undefined is ok
           undefined,
-          formData
+          formData,
         );
 
         expect(result).toHaveProperty("type", "success");
@@ -164,7 +164,7 @@ describe("formAction", () => {
         const result = await nestedObjectInput(
           // @ts-expect-error undefined is ok
           undefined,
-          formData
+          formData,
         );
 
         expect(result).toHaveProperty("type", "invalid");
@@ -189,11 +189,11 @@ describe("formAction", () => {
 
       const result = await foo.run(
         async ({ input: { age, allright } }) =>
-          `You are ${age} y.o. and feeling ${allright ? "ok" : "ko"}`
+          `You are ${age} y.o. and feeling ${allright ? "ok" : "ko"}`,
       )(
         // @ts-expect-error undefined is ok
         undefined,
-        formData
+        formData,
       );
 
       expect(result).toHaveProperty("type", "success");
@@ -222,7 +222,7 @@ describe("formAction", () => {
         .run(async ({ input }) => {})(
         // @ts-expect-error
         undefined,
-        formData
+        formData,
       );
 
       expect(result).toHaveProperty("validationError", {

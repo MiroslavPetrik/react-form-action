@@ -36,18 +36,18 @@ export function createFormAction<
   Data,
   Error = Data,
   ValidationError = Record<string, never>,
-  Payload = FormData
+  Payload = FormData,
 >(
   formAction: (params: {
     success: (data: Data) => SuccessState<Data>;
     failure: (error: Error) => FailureState<Error>;
     invalid: (
-      validationError: ValidationError
+      validationError: ValidationError,
     ) => InvalidState<ValidationError>;
   }) => (
     state: FormState<Data, Error, ValidationError>,
-    payload: Payload
-  ) => Promise<FormState<Data, Error, ValidationError>>
+    payload: Payload,
+  ) => Promise<FormState<Data, Error, ValidationError>>,
 ) {
   function success(data: Data): SuccessState<Data> {
     return { type: "success", data, error: null, validationError: null };
@@ -56,7 +56,7 @@ export function createFormAction<
     return { type: "failure", data: null, error, validationError: null };
   }
   function invalid(
-    validationError: ValidationError
+    validationError: ValidationError,
   ): InvalidState<ValidationError> {
     return { type: "invalid", data: null, error: null, validationError };
   }
