@@ -164,34 +164,34 @@ function formActionBuilder<
     schema === emptyInput
       ? undefined
       : <Data>(action: SchemaAction<Data, Context, RealSchema>) => {
-          return createFormAction<
-            Data,
-            Err,
-            z.inferFlattenedErrors<RealSchema>
-          >(({ success, failure, invalid }) => {
-            const formDataSchema = zfd.formData(schema);
+          return createFormAction<Data, Err, z.inferFormattedError<RealSchema>>(
+            ({ success, failure, invalid }) => {
+              const formDataSchema = zfd.formData(schema);
 
-            return async (state, formData) => {
-              const ctx = await createContext(formData);
-              const result = formDataSchema.safeParse(formData);
+              return async (state, formData) => {
+                const ctx = await createContext(formData);
+                const result = formDataSchema.safeParse(formData);
 
-              if (!result.success) {
-                return invalid(result.error.flatten());
-              }
-
-              const input = result.data as z.infer<RealSchema>;
-
-              try {
-                return success(await action({ input, ctx }));
-              } catch (error) {
-                if (processError) {
-                  return failure(processError({ error, ctx }));
+                if (!result.success) {
+                  return invalid(
+                    result.error.format() as z.inferFormattedError<RealSchema>,
+                  );
                 }
-                // must be handled by error boundary
-                throw error;
-              }
-            };
-          });
+
+                const input = result.data as z.infer<RealSchema>;
+
+                try {
+                  return success(await action({ input, ctx }));
+                } catch (error) {
+                  if (processError) {
+                    return failure(processError({ error, ctx }));
+                  }
+                  // must be handled by error boundary
+                  throw error;
+                }
+              };
+            },
+          );
         };
 
   return {
