@@ -171,11 +171,19 @@ describe("formAction", () => {
         expect(result).toHaveProperty("data", null);
         expect(result).toHaveProperty("error", null);
         expect(result).toHaveProperty("validationError", {
-          fieldErrors: {
-            allright: ["Invalid input"],
-            user: ["String must contain at least 3 character(s)"],
+          _errors: [],
+          allright: {
+            _errors: [
+              'Invalid literal value, expected "on"',
+              "Invalid literal value, expected undefined",
+            ],
           },
-          formErrors: [],
+          user: {
+            _errors: [],
+            name: {
+              _errors: ["String must contain at least 3 character(s)"],
+            },
+          },
         });
       });
     });
@@ -226,10 +234,8 @@ describe("formAction", () => {
       );
 
       expect(result).toHaveProperty("validationError", {
-        fieldErrors: {
-          confirm: ["Passwords don't match"],
-        },
-        formErrors: [],
+        _errors: [],
+        confirm: { _errors: ["Passwords don't match"] },
       });
       expect(result).toHaveProperty("error", null);
     });
