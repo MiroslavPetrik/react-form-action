@@ -14,7 +14,9 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest",
-    "typecheck": "vitest --typecheck"
+    "typecheck": "vitest --typecheck",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "exports": {
     ".": {
@@ -51,6 +53,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "next": "^14.0.2",
+    "prettier": "^3.3.3",
     "react-render-prop-type": "^0.1.0",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",

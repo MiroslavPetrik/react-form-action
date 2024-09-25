@@ -16,7 +16,7 @@ import { FormStatus } from "./FormStatus";
 export type FormStateProps<Data, Error, ValidationError, Payload> = {
   action: (
     state: FormState<Data, Error, ValidationError>,
-    payload: Payload
+    payload: Payload,
   ) => Promise<FormState<Data, Error, ValidationError>>;
   initialData: Data;
   permalink?: string;
@@ -27,7 +27,7 @@ export function initial<Data>(data: Data): InitialState<Data> {
 }
 
 type FormStatusFlags<
-  T extends FormState<unknown, unknown, unknown>["type"] | unknown = unknown
+  T extends FormState<unknown, unknown, unknown>["type"] | unknown = unknown,
 > = {
   isInitial: T extends "initial" ? true : false;
   isInvalid: T extends "invalid" ? true : false;
@@ -69,17 +69,17 @@ export function Form<Data, Error, ValidationError>({
   const [state, formAction] = useActionState(
     action,
     initial(initialData),
-    permalink
+    permalink,
   );
 
   const metaState =
     state.type === "initial"
       ? { ...state, ...neverMetaState, isInitial: true as const }
       : state.type === "invalid"
-      ? { ...state, ...neverMetaState, isInvalid: true as const }
-      : state.type === "failure"
-      ? { ...state, ...neverMetaState, isFailure: true as const }
-      : { ...state, ...neverMetaState, isSuccess: true as const };
+        ? { ...state, ...neverMetaState, isInvalid: true as const }
+        : state.type === "failure"
+          ? { ...state, ...neverMetaState, isFailure: true as const }
+          : { ...state, ...neverMetaState, isSuccess: true as const };
 
   return (
     <form action={formAction} {...props}>
