@@ -85,11 +85,11 @@ type FormActionBuilder<
     ? <Data>(
         action: SchemaAction<Data, Context, Schema>,
       ) => (
-        state: FormState<Data, Err, z.inferFlattenedErrors<Schema>>,
+        state: FormState<Data, Err, z.inferFormattedError<Schema>>,
         payload: FormData,
       ) => Promise<
         Flatten<
-          | InvalidState<z.inferFlattenedErrors<Schema>>
+          | InvalidState<z.inferFormattedError<Schema>>
           | FailureState<Err>
           | SuccessState<Data>
         >
