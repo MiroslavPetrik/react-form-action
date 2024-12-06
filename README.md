@@ -50,7 +50,7 @@ const i18nMiddleware = async () => {
 const authAction = formAction
   .use(i18nMiddleware)
   .use(async ({ ctx: { t } }) =>
-    console.log("🎉 context enhanced by previous middlewares 🎉", t),
+    console.log("🎉 context enhanced by previous middlewares 🎉", t)
   )
   .error(({ error }) => {
     if (error instanceof DbError) {
@@ -85,7 +85,7 @@ export const signUp = authAction
       .refine((data) => data.password === data.confirm, {
         message: "Passwords don't match",
         path: ["confirm"],
-      }),
+      })
   ) // if using refinement, only one input call is permited, as schema with ZodEffects is not extendable.
   .run(async ({ ctx: { t }, input: { email, password } }) => {
     // 🎉 passwords match!
@@ -161,7 +161,7 @@ export const updateUser = createFormAction<
 
       return failure({ message: "Failed to update user." });
     }
-  },
+  }
 );
 ```
 
@@ -228,7 +228,7 @@ export const signUp = authAction
       })
       .refine((data) => data.password === data.confirm, {
         message: "Passwords don't match",
-      }),
+      })
   )
   .run(async ({ ctx, input }) => {
     // implementation
@@ -237,19 +237,22 @@ export const signUp = authAction
 export function SignUpForm() {
   return (
     <Form action={signUp} initialData="">
-      {({ error, data, validationError }) => (
-        <>
-          {/*
-            When the "name" prop is ommited, the top-level error will be rendered e.g.:
-            "Passwords don't match"
-          */}
-          <ZodFieldError errors={validationError} />
-          {/* Access fields by their name: */}
-          <ZodFieldError errors={validationError} name="password" />
-          {/* Access nested fields by dot access notation: */}
-          <ZodFieldError errors={validationError} name="user.email" />
-        </>
-      )}
+      {({ isInvalid, validationError }) =>
+        {/* Render ZodFieldError behind the isInvalid flag to narrow type (omits the possibility of null) */}
+        isInvalid && (
+          <>
+            {/*
+              When the "name" prop is ommited, the top-level error will be rendered e.g.:
+              "Passwords don't match"
+            */}
+            <ZodFieldError errors={validationError} />
+            {/* Access fields by their name: */}
+            <ZodFieldError errors={validationError} name="password" />
+            {/* Access nested fields by dot access notation: */}
+            <ZodFieldError errors={validationError} name="user.email" />
+          </>
+        )
+      }
     </Form>
   );
 }

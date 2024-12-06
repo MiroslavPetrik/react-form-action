@@ -6,13 +6,13 @@ describe("formAction.input", () => {
   describe("valid calls", () => {
     test("works with z.object()", () => {
       expectTypeOf<typeof formAction.input>().toBeCallableWith(
-        z.object({ name: z.string() }),
+        z.object({ name: z.string() })
       );
     });
 
     test("it supports refinement", () => {
       expectTypeOf<typeof formAction.input>().toBeCallableWith(
-        z.object({ name: z.string() }).refine((val) => val),
+        z.object({ name: z.string() }).refine((val) => val)
       );
     });
   });
@@ -34,13 +34,13 @@ describe("formAction.input", () => {
 
       // @ts-expect-error
       expectTypeOf<typeof basic>().not.toBeCallableWith(
-        z.object({ surname: z.string() }).refine((val) => val),
+        z.object({ surname: z.string() }).refine((val) => val)
       );
     });
 
     test("Extending schema with effect is not possible", () => {
       const withEffect = formAction.input(
-        z.object({ name: z.string() }).refine((val) => val),
+        z.object({ name: z.string() }).refine((val) => val)
       );
 
       // Extending schema with effect is not possible.
@@ -48,7 +48,7 @@ describe("formAction.input", () => {
 
       // @ts-expect-error
       expectTypeOf<typeof withEffect>().not.toBeCallableWith(
-        z.object({ name: z.string() }),
+        z.object({ name: z.string() })
       );
     });
   });
@@ -104,7 +104,7 @@ describe("formAction.input", () => {
             type: "invalid";
             data: null;
             error: null;
-            validationError: z.inferFlattenedErrors<typeof schema>;
+            validationError: z.inferFormattedError<typeof schema>;
           }
       >();
     });

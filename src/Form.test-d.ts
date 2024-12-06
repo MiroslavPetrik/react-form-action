@@ -55,10 +55,8 @@ describe("FormProps", () => {
           data: null;
           error: null;
           validationError: {
-            fieldErrors: {
-              email?: string[];
-              password?: string[];
-            };
+            email?: { _errors: string[] };
+            password?: { _errors: string[] };
           };
         }
       | {
