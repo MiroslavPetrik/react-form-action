@@ -230,7 +230,7 @@ export const signUp = authAction
         message: "Passwords don't match",
       })
   )
-  .run(async ({ ctx: { t }, input: { email, password } }) => {
+  .run(async ({ ctx, input }) => {
     // implementation
   });
 
