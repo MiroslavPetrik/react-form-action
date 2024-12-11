@@ -11,7 +11,6 @@ import type {
   SuccessState,
 } from "./createFormAction";
 import { useActionState } from "react";
-import { FormStatus } from "./FormStatus";
 
 export type FormStateProps<Data, Error, ValidationError, Payload> = {
   action: (
@@ -66,7 +65,7 @@ export function Form<Data, Error, ValidationError>({
   permalink,
   ...props
 }: FormProps<Data, Error, ValidationError>) {
-  const [state, formAction] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     action,
     initial(initialData),
     permalink,
@@ -83,14 +82,10 @@ export function Form<Data, Error, ValidationError>({
 
   return (
     <form action={formAction} {...props}>
-      <FormStatus>
-        {({ pending }) =>
-          children({
-            ...metaState,
-            isPending: pending,
-          })
-        }
-      </FormStatus>
+      {children({
+        ...metaState,
+        isPending,
+      })}
     </form>
   );
 }

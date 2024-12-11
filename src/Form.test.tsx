@@ -21,7 +21,7 @@ describe("Form", () => {
           })
           .refine((data) => data.password === data.confirm, {
             message: "Passwords don't match",
-          })
+          }),
       )
       .error(() => "fail")
       .run(async () => {
