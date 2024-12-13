@@ -32,6 +32,16 @@ export type FormState<Data, Error, ValidationError = Record<string, never>> =
   | FailureState<Error>
   | SuccessState<Data>;
 
+export type FormAction<
+  Data,
+  Error = Data,
+  ValidationError = Record<string, never>,
+  Payload = FormData,
+> = (
+  state: FormState<Data, Error, ValidationError>,
+  payload: Payload,
+) => Promise<FormState<Data, Error, ValidationError>>;
+
 export function createFormAction<
   Data,
   Error = Data,
@@ -44,10 +54,7 @@ export function createFormAction<
     invalid: (
       validationError: ValidationError,
     ) => InvalidState<ValidationError>;
-  }) => (
-    state: FormState<Data, Error, ValidationError>,
-    payload: Payload,
-  ) => Promise<FormState<Data, Error, ValidationError>>,
+  }) => FormAction<Data, Error, ValidationError, Payload>,
 ) {
   function success(data: Data): SuccessState<Data> {
     return { type: "success", data, error: null, validationError: null };

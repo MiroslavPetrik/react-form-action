@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, test } from "vitest";
+import { describe, test, expect } from "vitest";
 import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
 import { z } from "zod";
@@ -23,7 +23,6 @@ describe("Form", () => {
             message: "Passwords don't match",
           }),
       )
-      .error(() => "fail")
       .run(async () => {
         // implementation
         return "success";
@@ -36,14 +35,20 @@ describe("Form", () => {
             return (
               <>
                 {isInvalid && (
-                  <>
+                  <p>
                     <ZodFieldError errors={validationError} />
-                    <ZodFieldError errors={validationError} name="user.email" />
-                    <ZodFieldError errors={validationError} name="password" />
-                  </>
+                  </p>
                 )}
                 <input type="text" name="user.email" data-testid="email" />
+                {isInvalid && (
+                  <ZodFieldError errors={validationError} name="user.email" />
+                )}
                 <input type="text" name="password" data-testid="pass" />
+                {isInvalid && (
+                  <p>
+                    <ZodFieldError errors={validationError} name="password" />
+                  </p>
+                )}
                 <input type="text" name="confirm" />
                 <button type="submit" data-testid="submit" />
               </>
@@ -61,18 +66,18 @@ describe("Form", () => {
     const pass = screen.getByTestId("pass");
     await act(() => userEvent.type(pass, "short"));
 
-    // TODO: this fails
-    // const submit = screen.getByTestId("submit");
-    // await act(() => userEvent.click(submit));
+    const submit = screen.getByTestId("submit");
+    await act(() => userEvent.click(submit));
 
-    // expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
-    // expect(
-    //   screen.getByText("Something email")
-    //   // @ts-expect-error
-    // ).toBeInTheDocument();
-    // expect(
-    //   screen.getByText("String must contain at least 8 character(s)")
-    //   // @ts-expect-error
-    // ).toBeInTheDocument();
+    // @ts-expect-error
+    expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
+    expect(
+      screen.getByText("Invalid email"),
+      // @ts-expect-error
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("String must contain at least 8 character(s)"),
+      // @ts-expect-error
+    ).toBeInTheDocument();
   });
 });

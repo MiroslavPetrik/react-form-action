@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import type { FormHTMLAttributes } from "react";
+import React, { useTransition } from "react";
+import type { FormHTMLAttributes, FormEvent } from "react";
 import type { RenderProp } from "react-render-prop-type";
 import type {
   FormState,
@@ -19,6 +19,13 @@ export type FormStateProps<Data, Error, ValidationError, Payload> = {
   ) => Promise<FormState<Data, Error, ValidationError>>;
   initialData: Data;
   permalink?: string;
+  /**
+   * Opt-in into automatic form reset by using the form "action" prop.
+   * By default, the onSubmit with a custom transition which opts-out of the implicit form reset.
+   * See for more. https://github.com/facebook/react/issues/29034
+   * @default false
+   */
+  autoReset?: boolean;
 };
 
 export function initial<Data>(data: Data): InitialState<Data> {
@@ -34,7 +41,7 @@ type FormStatusFlags<
   isSuccess: T extends "success" ? true : false;
 };
 
-type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T &
+export type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T &
   FormStatusFlags<T["type"]> & {
     isPending: boolean;
   };
@@ -63,6 +70,7 @@ export function Form<Data, Error, ValidationError>({
   action,
   initialData,
   permalink,
+  autoReset = false,
   ...props
 }: FormProps<Data, Error, ValidationError>) {
   const [state, formAction, isPending] = useActionState(
@@ -70,22 +78,37 @@ export function Form<Data, Error, ValidationError>({
     initial(initialData),
     permalink,
   );
+  const [, startTransition] = useTransition();
 
   const metaState =
     state.type === "initial"
-      ? { ...state, ...neverMetaState, isInitial: true as const }
+      ? { ...state, ...neverMetaState, isPending, isInitial: true as const }
       : state.type === "invalid"
-        ? { ...state, ...neverMetaState, isInvalid: true as const }
+        ? { ...state, ...neverMetaState, isPending, isInvalid: true as const }
         : state.type === "failure"
-          ? { ...state, ...neverMetaState, isFailure: true as const }
-          : { ...state, ...neverMetaState, isSuccess: true as const };
+          ? { ...state, ...neverMetaState, isPending, isFailure: true as const }
+          : {
+              ...state,
+              ...neverMetaState,
+              isPending,
+              isSuccess: true as const,
+            };
+
+  const submitStrategy = autoReset
+    ? { action: formAction }
+    : {
+        onSubmit: (event: FormEvent<HTMLFormElement>) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          startTransition(() => {
+            formAction(new FormData(form));
+          });
+        },
+      };
 
   return (
-    <form action={formAction} {...props}>
-      {children({
-        ...metaState,
-        isPending,
-      })}
+    <form {...submitStrategy} {...props}>
+      {children(metaState)}
     </form>
   );
 }
