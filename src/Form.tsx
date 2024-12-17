@@ -15,7 +15,7 @@ import { useActionState } from "react";
 export type FormStateProps<Data, Error, ValidationError, Payload> = {
   action: (
     state: FormState<Data, Error, ValidationError>,
-    payload: Payload,
+    payload: Payload
   ) => Promise<FormState<Data, Error, ValidationError>>;
   initialData: Data;
   permalink?: string;
@@ -76,7 +76,7 @@ export function Form<Data, Error, ValidationError>({
   const [state, formAction, isPending] = useActionState(
     action,
     initial(initialData),
-    permalink,
+    permalink
   );
   const [, startTransition] = useTransition();
 
