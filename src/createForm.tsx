@@ -1,7 +1,7 @@
 import React, { type PropsWithChildren } from "react";
 import type { FormAction } from "./createFormAction";
-import { Form } from "./Form";
-import { FormContext, useFormContext } from "./FormContext";
+import { Form as BaseForm } from "./Form";
+import { FormContext } from "./FormContext";
 
 /**
  * Creates a Form component which state is accessible via context - useFormContext() hook.
@@ -11,25 +11,18 @@ export function createForm<
   Error = Data,
   ValidationError = Record<string, never>,
 >(action: FormAction<Data, Error, ValidationError>) {
-  const ContextForm = ({
+  const Form = ({
     children,
     ...props
   }: PropsWithChildren<{ initialData: Data }>) => {
     return (
-      <Form action={action} {...props}>
+      <BaseForm action={action} {...props}>
         {(state) => <FormContext value={state}>{children}</FormContext>}
-      </Form>
+      </BaseForm>
     );
   };
 
-  function Pending({ children }: PropsWithChildren) {
-    const { isPending } = useFormContext();
-
-    return isPending && children;
-  }
-
   return {
-    Form: ContextForm,
-    Pending,
+    Form,
   };
 }

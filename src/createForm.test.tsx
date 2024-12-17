@@ -1,51 +1,42 @@
 import React from "react";
 import { describe, test, expect } from "vitest";
-import { userEvent } from "@testing-library/user-event";
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { z } from "zod";
 import { createForm } from "./createForm";
 import { formAction } from "./formAction";
+import { useFormContext } from ".";
 
 describe("createForm", () => {
-  describe("Pending", () => {
-    test("it renders children when the action is pending", async () => {
-      const signUp = formAction
-        .input(
-          z.object({
-            email: z.string().email(),
-          })
-        )
-        .run(async () => {
-          await new Promise(() => {
-            /* never resolve */
-          });
-          return null;
-        });
+  test("it creates a Form which provides a context", async () => {
+    const signUp = formAction
+      .input(
+        z.object({
+          email: z.string().email(),
+        })
+      )
+      .run(async () => {
+        return null;
+      });
 
-      const { Form, Pending } = createForm(signUp);
+    const { Form } = createForm(signUp);
 
-      function SignUpForm() {
-        return (
-          <Form initialData={null}>
-            <input type="text" name="email" data-testid="email" />
-            <button type="submit" data-testid="submit" />
-            <Pending>
-              <p>Please wait...</p>
-            </Pending>
-          </Form>
-        );
-      }
+    function ContextConsumer() {
+      const state = useFormContext();
 
-      render(<SignUpForm />);
+      return state.type;
+    }
 
-      const email = screen.getByTestId("email");
-      await act(() => userEvent.type(email, "form@action.com"));
+    function SignUpForm() {
+      return (
+        <Form initialData={null}>
+          <ContextConsumer />
+        </Form>
+      );
+    }
 
-      const submit = screen.getByTestId("submit");
-      await act(() => userEvent.click(submit));
+    render(<SignUpForm />);
 
-      // @ts-expect-error
-      expect(screen.getByText("Please wait...")).toBeInTheDocument();
-    });
+    // @ts-expect-error
+    expect(screen.getByText("initial")).toBeInTheDocument();
   });
 });
