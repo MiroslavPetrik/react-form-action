@@ -1,21 +1,11 @@
-import React, { createContext, use, type PropsWithChildren } from "react";
-import type { FormAction, FormState } from "./createFormAction";
-import { Form, type FormMetaState } from "./Form";
+import React, { type PropsWithChildren } from "react";
+import type { FormAction } from "./createFormAction";
+import { Form } from "./Form";
+import { FormContext, useFormContext } from "./FormContext";
 
-const FormContext = createContext<FormMetaState<
-  FormState<unknown, unknown, unknown>
-> | null>(null);
-
-const useFormContext = () => {
-  const ctx = use(FormContext);
-
-  if (!ctx) {
-    throw new Error("Form Context must be initialized before use.");
-  }
-
-  return ctx;
-};
-
+/**
+ * Creates a Form component which state is accessible via context - useFormContext() hook.
+ */
 export function createForm<
   Data,
   Error = Data,
