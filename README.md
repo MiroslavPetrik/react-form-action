@@ -19,6 +19,11 @@ End-to-end typesafe success, error & validation state control for Next.js 14 for
 - ✅ `<Form />` component reads the action's response.
 - ✅ Computes progress meta-state like `isInvalid`, `isSuccess` and more.
 
+**Context**
+
+- ✅ Access the action state via `useFormContext()` hook.
+- ✅ Keeps JSX markup free of render-props.
+
 ## Install
 
 ```
@@ -50,7 +55,7 @@ const i18nMiddleware = async () => {
 const authAction = formAction
   .use(i18nMiddleware)
   .use(async ({ ctx: { t } }) =>
-    console.log("🎉 context enhanced by previous middlewares 🎉", t),
+    console.log("🎉 context enhanced by previous middlewares 🎉", t)
   )
   .error(({ error }) => {
     if (error instanceof DbError) {
@@ -85,7 +90,7 @@ export const signUp = authAction
       .refine((data) => data.password === data.confirm, {
         message: "Passwords don't match",
         path: ["confirm"],
-      }),
+      })
   ) // if using refinement, only one input call is permited, as schema with ZodEffects is not extendable.
   .run(async ({ ctx: { t }, input: { email, password } }) => {
     // 🎉 passwords match!
@@ -161,7 +166,7 @@ export const updateUser = createFormAction<
 
       return failure({ message: "Failed to update user." });
     }
-  },
+  }
 );
 ```
 
@@ -201,6 +206,50 @@ export function UpdateUserForm() {
           </button>
         </>
       )}
+    </Form>
+  );
+}
+```
+
+### Context Form
+
+```tsx
+// Example route: /app/auth/signup/SignUpForm.tsx
+"use client";
+
+import { createForm, Pending, useFormContext } from "react-form-action/client";
+import { signupAction } from "./actions";
+
+// This call will succeed only in client component
+const { Form } = createForm(signupAction);
+
+function Error() {
+  // read any state from the FormContext:
+  const {
+    error,
+    data,
+    validationError,
+    isPending,
+    isFailure,
+    isInvalid,
+    isSuccess,
+    isInitial
+  } = useFormContext();
+
+  return isFailure && "Failed to submit". // use the error somehow
+}
+
+// render this form on your RSC page (/app/auth/signup/page.tsx)
+export function SignupForm() {
+  // This Form does not use render props.
+  return (
+    <Form>
+      <input name="email" />
+      <input name="password" />
+      <Pending>
+        {/* This renders only when the action is pending. */}
+        <p>Please wait...</p>
+      </Pending>
     </Form>
   );
 }

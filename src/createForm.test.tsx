@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { z } from "zod";
 import { createForm } from "./createForm";
 import { formAction } from "./formAction";
-import { useFormContext } from ".";
+import { useFormContext } from "./FormContext";
 
 describe("createForm", () => {
   test("it creates a Form which provides a context", async () => {

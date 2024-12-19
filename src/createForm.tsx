@@ -1,3 +1,5 @@
+"use client";
+
 import React, { type PropsWithChildren } from "react";
 import type { FormAction } from "./createFormAction";
 import { Form as BaseForm } from "./Form";
