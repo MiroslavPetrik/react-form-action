@@ -279,3 +279,68 @@ return function MyForm() {
   );
 };
 ```
+
+### Using with `useActionState` Hook
+
+The action creators are compatible with React's `useActionState` hook, which provides a more flexible way to handle form state:
+
+```tsx
+"use client";
+import { useActionState } from "react-dom";
+
+// First, create a wrapper function for the action
+export async function signInAction(prevState: any, formData: FormData | null) {
+  return signIn(prevState, formData || new FormData());
+}
+
+export function SignInForm() {
+  const [state, formAction, isPending] = useActionState(signInAction, null);
+
+  return (
+    <form action={formAction}>
+      <input type="email" name="email" />
+      <input type="password" name="password" />
+
+      {state?.type === "invalid" && (
+        <div className="error">
+          <ZodFieldError errors={state.validationError} />
+        </div>
+      )}
+
+      <button disabled={isPending}>
+        {isPending ? "Signing in..." : "Sign in"}
+      </button>
+    </form>
+  );
+}
+```
+
+### Handling Next.js Redirects
+
+The action creator seamlessly handles Next.js redirects. When using `redirect()` from `next/navigation`, the action will properly trigger the navigation:
+
+```ts
+"use server";
+
+export const signIn = authAction
+  .input(z.object({ email: z.string().email() }))
+  .input(z.object({ password: z.string() }))
+  .run(async ({ input: { email, password } }) => {
+    await db.signIn({ email, password });
+    // The redirect will be properly handled by the error middleware
+    redirect("/dashboard");
+  });
+```
+
+Note: When using redirects, make sure your error middleware is configured to handle the `NEXT_REDIRECT` error:
+
+```ts
+const authAction = formAction
+  .error(async ({ error }) => {
+    // Allow Next.js redirects to pass through
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+    // Handle other errors...
+  });
+```
