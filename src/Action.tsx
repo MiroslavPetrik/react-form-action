@@ -2,14 +2,7 @@
 
 import React, { type PropsWithChildren } from "react";
 import { createContext, use } from "react";
-import type {
-  ActionState,
-  InitialState,
-  InvalidState,
-  FailureState,
-  SuccessState,
-  FormAction,
-} from "./createFormAction";
+import type { ActionState, InitialState, FormAction } from "./createFormAction";
 import { useActionState } from "react";
 
 export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
@@ -18,7 +11,7 @@ export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
   permalink?: string;
 }>;
 
-export function initial<Data>(data: Data): InitialState<Data> {
+function initial<Data>(data: Data): InitialState<Data> {
   return { type: "initial", data, error: null, validationError: null };
 }
 
@@ -41,13 +34,6 @@ export type ActionContextState<
     action: (payload: FormData) => void;
     isPending: boolean;
   };
-
-// & RenderProp<
-//   | ActionContextState<InitialState<Data>>
-//   | ActionContextState<InvalidState<ValidationError>>
-//   | ActionContextState<FailureState<Error>>
-//   | ActionContextState<SuccessState<Data>>
-// >;
 
 const neverMetaState: ActionStatusFlags = {
   isInitial: false,

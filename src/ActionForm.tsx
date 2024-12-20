@@ -5,7 +5,10 @@ import type { FormHTMLAttributes, FormEvent } from "react";
 
 import { useActionContext } from "./Action";
 
-export type FormProps = Omit<FormHTMLAttributes<HTMLFormElement>, "action"> & {
+export type ActionFormProps = Omit<
+  FormHTMLAttributes<HTMLFormElement>,
+  "action"
+> & {
   /**
    * Opt-in into automatic form reset by using the form "action" prop.
    * By default, the onSubmit with a custom transition which opts-out of the implicit form reset.
@@ -15,7 +18,7 @@ export type FormProps = Omit<FormHTMLAttributes<HTMLFormElement>, "action"> & {
   autoReset?: boolean;
 };
 
-export function ActionForm({ autoReset = false, ...props }: FormProps) {
+export function ActionForm({ autoReset = false, ...props }: ActionFormProps) {
   const { action } = useActionContext();
 
   const submitStrategy = autoReset
