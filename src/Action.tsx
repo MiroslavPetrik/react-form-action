@@ -2,7 +2,14 @@
 
 import React, { type PropsWithChildren } from "react";
 import { createContext, use } from "react";
-import type { ActionState, InitialState, FormAction } from "./createFormAction";
+import type {
+  ActionState,
+  InitialState,
+  InvalidState,
+  SuccessState,
+  FailureState,
+  FormAction,
+} from "./createFormAction";
 import { useActionState } from "react";
 
 export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
@@ -43,16 +50,27 @@ const neverMetaState: ActionStatusFlags = {
 };
 
 /**
+ * NOTE: ActionContextState<ActionState<...>> would not allow discriminate the union inside of the ActionState.
+ */
+type SpreadActionContext<
+  Data = unknown,
+  Error = unknown,
+  ValidationError = unknown,
+> =
+  | ActionContextState<InitialState<Data>>
+  | ActionContextState<InvalidState<ValidationError>>
+  | ActionContextState<FailureState<Error>>
+  | ActionContextState<SuccessState<Data>>;
+
+/**
  * A context exposing the form action state.
  */
-const ActionContext = createContext<ActionContextState<
-  ActionState<unknown, unknown, unknown>
-> | null>(null);
+const ActionContext = createContext<SpreadActionContext | null>(null);
 
 /**
  * A hook to consume the form action state from the context.
  */
-export const useActionContext = () => {
+export function useActionContext<Data, Error, ValidationError>() {
   const ctx = use(ActionContext);
 
   if (!ctx) {
@@ -61,8 +79,9 @@ export const useActionContext = () => {
     );
   }
 
-  return ctx;
-};
+  // Generics shouldn't be used for explicit casts, I know
+  return ctx as SpreadActionContext<Data, Error, ValidationError>;
+}
 
 export function Action<Data, Error, ValidationError>({
   children,

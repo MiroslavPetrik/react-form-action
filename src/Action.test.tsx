@@ -7,14 +7,10 @@ import { Action, useActionContext } from "./Action";
 import { formAction } from "./formAction";
 import { ActionForm } from "./ActionForm";
 
+import { createComponents } from "./createComponents";
+
 describe("Action", () => {
   test("it enables form to consume action via context", async () => {
-    function ValidationError() {
-      const { isInvalid } = useActionContext();
-
-      return isInvalid && <p>Invalid email</p>;
-    }
-
     const subscribeAction = formAction
       .input(
         z.object({
@@ -25,14 +21,16 @@ describe("Action", () => {
         return null;
       });
 
+    const { FieldError } = createComponents(subscribeAction);
+
     function SubscribeForm() {
       return (
         <Action action={subscribeAction} initialData={null}>
           <ActionForm>
             <input type="text" name="email" data-testid="email" />
+            <FieldError name="email" />
             <button type="submit" data-testid="submit" />
           </ActionForm>
-          <ValidationError />
         </Action>
       );
     }

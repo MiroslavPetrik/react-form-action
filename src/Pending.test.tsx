@@ -4,9 +4,10 @@ import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
 import { z } from "zod";
 
+import { Action } from "./Action";
 import { formAction } from "./formAction";
-import { createForm } from "./createForm";
 import { Pending } from "./Pending";
+import { ActionForm } from "./ActionForm";
 
 describe("Pending", () => {
   test("it renders children when the action is pending", async () => {
@@ -23,17 +24,17 @@ describe("Pending", () => {
         return null;
       });
 
-    const { Form } = createForm(signUp);
-
     function SignUpForm() {
       return (
-        <Form initialData={null}>
-          <input type="text" name="email" data-testid="email" />
-          <button type="submit" data-testid="submit" />
-          <Pending>
-            <p>Please wait...</p>
-          </Pending>
-        </Form>
+        <Action action={signUp} initialData={null}>
+          <ActionForm>
+            <input type="text" name="email" data-testid="email" />
+            <button type="submit" data-testid="submit" />
+            <Pending>
+              <p>Please wait...</p>
+            </Pending>
+          </ActionForm>
+        </Action>
       );
     }
 
