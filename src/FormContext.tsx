@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, use } from "react";
-import type { FormState } from "./createFormAction";
+import type { ActionState } from "./createFormAction";
 import type { FormMetaState } from "./Form";
 
 /**
@@ -9,7 +9,7 @@ import type { FormMetaState } from "./Form";
  * @private You don't need to use this component directly. Use the `createForm` function instead.
  */
 export const FormContext = createContext<FormMetaState<
-  FormState<unknown, unknown, unknown>
+  ActionState<unknown, unknown, unknown>
 > | null>(null);
 
 /**

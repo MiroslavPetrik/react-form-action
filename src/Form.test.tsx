@@ -21,7 +21,7 @@ describe("Form", () => {
           })
           .refine((data) => data.password === data.confirm, {
             message: "Passwords don't match",
-          }),
+          })
       )
       .run(async () => {
         // implementation
@@ -72,11 +72,11 @@ describe("Form", () => {
     // @ts-expect-error
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
     expect(
-      screen.getByText("Invalid email"),
+      screen.getByText("Invalid email")
       // @ts-expect-error
     ).toBeInTheDocument();
     expect(
-      screen.getByText("String must contain at least 8 character(s)"),
+      screen.getByText("String must contain at least 8 character(s)")
       // @ts-expect-error
     ).toBeInTheDocument();
   });

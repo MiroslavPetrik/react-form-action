@@ -4,7 +4,7 @@ import React, { useTransition } from "react";
 import type { FormHTMLAttributes, FormEvent } from "react";
 import type { RenderProp } from "react-render-prop-type";
 import type {
-  FormState,
+  ActionState,
   InitialState,
   InvalidState,
   FailureState,
@@ -14,9 +14,9 @@ import { useActionState } from "react";
 
 export type FormStateProps<Data, Error, ValidationError, Payload> = {
   action: (
-    state: FormState<Data, Error, ValidationError>,
+    state: ActionState<Data, Error, ValidationError>,
     payload: Payload
-  ) => Promise<FormState<Data, Error, ValidationError>>;
+  ) => Promise<ActionState<Data, Error, ValidationError>>;
   initialData: Data;
   permalink?: string;
   /**
@@ -33,7 +33,7 @@ export function initial<Data>(data: Data): InitialState<Data> {
 }
 
 type FormStatusFlags<
-  T extends FormState<unknown, unknown, unknown>["type"] | unknown = unknown,
+  T extends ActionState<unknown, unknown, unknown>["type"] | unknown = unknown,
 > = {
   isInitial: T extends "initial" ? true : false;
   isInvalid: T extends "invalid" ? true : false;
@@ -41,10 +41,11 @@ type FormStatusFlags<
   isSuccess: T extends "success" ? true : false;
 };
 
-export type FormMetaState<T extends FormState<unknown, unknown, unknown>> = T &
-  FormStatusFlags<T["type"]> & {
-    isPending: boolean;
-  };
+export type FormMetaState<T extends ActionState<unknown, unknown, unknown>> =
+  T &
+    FormStatusFlags<T["type"]> & {
+      isPending: boolean;
+    };
 
 export type FormProps<Data, Error, ValidationError> = Omit<
   FormHTMLAttributes<HTMLFormElement>,
