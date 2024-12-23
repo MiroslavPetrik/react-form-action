@@ -40,7 +40,7 @@ npm i react-form-action zod-form-data
 #### 1️⃣ Create a Server Action
 
 ```tsx
-// app/subscibe/action.ts
+// app/subscribe/action.ts
 "use server";
 
 import { formAction } from "react-form-action";
@@ -56,7 +56,7 @@ export const subscribeAction = formAction
 #### 2️⃣ Create a Client Form Component
 
 ```tsx
-// app/subscibe/SubscribeForm.tsx
+// app/subscribe/SubscribeForm.tsx
 "use client";
 
 import {
@@ -107,11 +107,9 @@ function SubmitButton() {
 #### 3️⃣ Render the form on a Page
 
 ```tsx
-// app/subscibe/page.tsx
+// app/subscribe/page.tsx
 
 import { SubscribeForm } from "./SubscribeForm";
-
-function SuccessMessage() {}
 
 export function Page() {
   return <SubscribeForm />;
