@@ -1,39 +1,18 @@
 import { expectTypeOf, describe, test } from "vitest";
-import { z } from "zod";
-import { formAction } from "./formAction";
-import type { FormProps } from "./Form";
+import { useActionContext } from "./Action";
 
-describe("FormProps", () => {
-  test("children props have mutually exclusive progress flags", () => {
-    const signUpSchema = z.object({
-      email: z.string().email(),
-      password: z.string(),
-    });
+describe("useActionContext", () => {
+  test("context value has mutually exclusive progress flags", () => {
+    const ctx = useActionContext<
+      string,
+      { type: string; message: string },
+      {
+        email?: { _errors: string[] };
+        password?: { _errors: string[] };
+      }
+    >();
 
-    const signUpAction = formAction
-      .input(signUpSchema)
-      .error(() => {
-        const dbError = {
-          type: "ProtocolError",
-          message: "Email already exists",
-        };
-        return dbError;
-      })
-      .run(async () => {
-        return "We've sent you and email";
-      });
-
-    function fakeFormRender<A, B, C>(props: FormProps<A, B, C>) {
-      return props.children;
-    }
-
-    const children = fakeFormRender({
-      action: signUpAction,
-      initialData: "Please sign up",
-      children: () => null,
-    });
-
-    expectTypeOf<typeof children>().parameter(0).toMatchTypeOf<
+    expectTypeOf<typeof ctx>().toMatchTypeOf<
       | {
           isPending: boolean;
           type: "initial";

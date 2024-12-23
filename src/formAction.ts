@@ -13,7 +13,7 @@ import {
   FailureState,
   InvalidState,
   SuccessState,
-  FormState,
+  ActionState,
 } from "./createFormAction";
 import { zfd } from "zod-form-data";
 
@@ -65,7 +65,7 @@ type FormActionBuilder<
               ? "Your input contains effect which prevents merging it with the previous inputs."
               : T
             : T
-      : "The schema output must be an object.",
+      : "The schema output must be an object."
   ) => FormActionBuilder<
     Schema extends ZodObject<infer O1 extends ZodRawShape>
       ? // merging won't work for effects, but that is sanitized in input parameter
@@ -83,10 +83,10 @@ type FormActionBuilder<
    */
   run: Schema extends ZodTypeAny
     ? <Data>(
-        action: SchemaAction<Data, Context, Schema>,
+        action: SchemaAction<Data, Context, Schema>
       ) => (
-        state: FormState<Data, Err, z.inferFormattedError<Schema>>,
-        payload: FormData,
+        state: ActionState<Data, Err, z.inferFormattedError<Schema>>,
+        payload: FormData
       ) => Promise<
         Flatten<
           | InvalidState<z.inferFormattedError<Schema>>
@@ -95,10 +95,10 @@ type FormActionBuilder<
         >
       >
     : <Data>(
-        action: Action<Data, Context>,
+        action: Action<Data, Context>
       ) => (
-        state: FormState<Data, Err>,
-        payload: FormData,
+        state: ActionState<Data, Err>,
+        payload: FormData
       ) => Promise<Flatten<FailureState<Err> | SuccessState<Data>>>;
   /**
    * A chainable context enhancing helper.
@@ -106,7 +106,7 @@ type FormActionBuilder<
    * @returns FormActionBuilder
    */
   use: <NewContext extends Record<string, unknown>>(
-    middleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>,
+    middleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
   ) => FormActionBuilder<Schema, Err, Context & NewContext>;
   /**
    * A chainable error handler to handle errors thrown while running the action passed to .run().
@@ -115,7 +115,7 @@ type FormActionBuilder<
    * @returns FormActionBuilder
    */
   error: <Err>(
-    processError: (params: { error: unknown; ctx: Context }) => Err,
+    processError: (params: { error: unknown; ctx: Context }) => Err
   ) => FormActionBuilder<Schema, Err, Context>;
 };
 
@@ -127,7 +127,7 @@ function formActionBuilder<
 >(
   schema: Schema,
   middleware: MiddlewareFn<Context, NewContext>[] = [],
-  processError?: (params: { error: unknown; ctx: Context }) => Err,
+  processError?: (params: { error: unknown; ctx: Context }) => Err
 ): FormActionBuilder<Schema, Err, Context> {
   async function createContext(formData: FormData) {
     let ctx = { formData } as Context;
@@ -174,7 +174,7 @@ function formActionBuilder<
 
                 if (!result.success) {
                   return invalid(
-                    result.error.format() as z.inferFormattedError<RealSchema>,
+                    result.error.format() as z.inferFormattedError<RealSchema>
                   );
                 }
 
@@ -190,7 +190,7 @@ function formActionBuilder<
                   throw error;
                 }
               };
-            },
+            }
           );
         };
 
@@ -200,15 +200,15 @@ function formActionBuilder<
         return formActionBuilder<T, Err, Context & NewContext>(
           newInput,
           middleware,
-          processError,
+          processError
         );
       } else if (schema._def.effect) {
         throw new Error(
-          "Previous input is not augmentable because it contains an effect.",
+          "Previous input is not augmentable because it contains an effect."
         );
       } else if (newInput._def.effect) {
         throw new Error(
-          "Your input contains effect which prevents merging it with the previous inputs.",
+          "Your input contains effect which prevents merging it with the previous inputs."
         );
       } else if (schema._def.typeName === ZodFirstPartyTypeKind.ZodObject) {
         // @ts-ignore
@@ -216,30 +216,30 @@ function formActionBuilder<
 
         return formActionBuilder<typeof merged, Err, Context & NewContext>(
           merged,
-          middleware,
+          middleware
         );
       } else {
         throw Error(
-          "Merging inputs works only for object schemas without effects.",
+          "Merging inputs works only for object schemas without effects."
         );
       }
     },
     use<NewContext extends Record<string, unknown>>(
-      newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>,
+      newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
     ) {
       return formActionBuilder<Schema, Err, Context & NewContext>(
         schema,
         [...middleware, newMiddleware],
-        processError,
+        processError
       );
     },
     error<Err>(
-      processError: (params: { error: unknown; ctx: Context }) => Err,
+      processError: (params: { error: unknown; ctx: Context }) => Err
     ) {
       return formActionBuilder<Schema, Err, Context>(
         schema,
         middleware,
-        processError,
+        processError
       );
     },
     run: schema === emptyInput ? run : runSchema,
