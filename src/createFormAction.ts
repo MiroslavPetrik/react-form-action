@@ -42,6 +42,10 @@ export type FormAction<
   payload: Payload
 ) => Promise<ActionState<Data, Error, ValidationError>>;
 
+export function initial<Data>(data: Data): InitialState<Data> {
+  return { type: "initial", data, error: null, validationError: null };
+}
+
 export function createFormAction<
   Data,
   Error = Data,

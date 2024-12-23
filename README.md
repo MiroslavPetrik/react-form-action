@@ -1,28 +1,29 @@
 # react-form-action
 
-End-to-end typesafe success, error & validation state control for Next.js 14 form actions.
+End-to-end typesafe success, error & validation state control for Next.js form actions.
 
 ## Features
 
 **Action Creator**
 
-- ✅ Provides `"invalid" | "success" | "failure"` response objects.
+- ✅ Provides envelope objects with `"initial" | "invalid" | "success" | "failure"` response types.
 - ✅ Define generic payload for each of the response type.
 
-**Form Action builder**
+**tRPC-like Form Action builder**
 
-- ✅ tRPC-like builder API for `.input(zodSchema)` & context `.use(middleware)`
-- ✅ Parses `formData` with [`zod-form-data`](https://www.npmjs.com/package/zod-form-data)
+- ✅ Define payload schema with the `.input(zodSchema)` to validate the `formData`
+- ✅ Reuse business logic with the `.use(middleware)` method.
+- ✅ Reuse error handling with the `.error(handler)`.
 
-**Stateful `<Form />`**
+**React Context access with the `<Action action={myFormAction} />` component**
 
-- ✅ `<Form />` component reads the action's response.
-- ✅ Computes progress meta-state like `isInvalid`, `isSuccess` and more.
+- ✅ The `useActionState()` accessible via the `useActionContext()` hook.
+- ✅ Computes progress flags like `isInvalid`, `isSuccess` based on the envelope type.
 
-**Context**
+**Context-bound `<Form />` component**
 
-- ✅ Access the action state via `useFormContext()` hook.
-- ✅ Keeps JSX markup free of render-props.
+- ✅ Reads the `action` from the `<Action />` context.
+- ✅ Opt-out from the default form reset after action submit.
 
 ## Install
 
@@ -34,9 +35,94 @@ npm i react-form-action zod-form-data
   <img alt="NPM Version" src="https://img.shields.io/npm/v/react-form-action?style=for-the-badge&labelColor=24292e">
 </a>
 
+## Getting Started
+
+#### 1️⃣ Create a Server Action
+
+```tsx
+// app/subscibe/action.ts
+"use server";
+
+import { formAction } from "react-form-action";
+import { z } from "zod";
+
+export const subscribeAction = formAction
+  .input(z.object({ email: z.string().email() }))
+  .run(async ({ input }) => {
+    return input.email;
+  });
+```
+
+#### 2️⃣ Create a Client Form Component
+
+```tsx
+// app/subscibe/SubscribeForm.tsx
+"use client";
+
+import {
+  Action,
+  Form,
+  Pending,
+  useActionContext,
+} from "react-form-action/client";
+
+import { subscribeAction } from "./action";
+
+const { FieldError } = createComponents(subscribeAction);
+
+export function SubscribeForm() {
+  return (
+    <Action action={subscribeAction} initialData="">
+      <SuccessMessage />
+      <Form>
+        <input name="email" />
+        {/*💡 The name prop supports autocompletion */}
+        <FieldError name="email" />
+      </Form>
+      <SubmitButton />
+      <Pending>Please wait...</Pending>
+    </Action>
+  );
+}
+
+function SuccessMessage() {
+  // Pass action to cast the type of the "data" value
+  const { isSuccess, data } = useActionContext(subscribeAction);
+
+  return isSuccess && <p>Email {data} was registered.</p>;
+}
+
+function SubmitButton() {
+  // no need for action when reading a generic value
+  const { isPending } = useActionContext();
+
+  return (
+    <button type="submit" disabled={isPending}>
+      {isPending ? "Submitting..." : "Submit"}
+    </button>
+  );
+}
+```
+
+#### 3️⃣ Render the form on a Page
+
+```tsx
+// app/subscibe/page.tsx
+
+import { SubscribeForm } from "./SubscribeForm";
+
+function SuccessMessage() {}
+
+export function Page() {
+  return <SubscribeForm />;
+}
+```
+
 ## Usage
 
 ### `formAction` builder
+
+The [`zod-form-data`](https://www.npmjs.com/package/zod-form-data) powered action builder.
 
 ```ts
 // app/actions/auth.ts
@@ -105,7 +191,9 @@ export const signUp = authAction
   });
 ```
 
-### Server Action (usable in Next.js)
+### Action Creator
+
+Low-level action creator, which provides the `success`, `failure` and `invalid` envelope constructors. With the `createFormAction` you must handle the native `FormData` by yourself.
 
 ```ts
 "use server";
@@ -170,61 +258,21 @@ export const updateUser = createFormAction<
 );
 ```
 
-### `<Form>` Component
+### Action Context
+
+The `<Action>` components enables you to access your `action`'s state with the `useActionContext()` hook:
 
 ```tsx
-"use client";
-// Form connects the formAction to the formState & provides the meta state props via render prop
-import { Form } from "react-form-action/client";
-
-import { updateUser } from "@/actions";
-
-export function UpdateUserForm() {
-  return (
-    <Form action={updateUser} initialData="foobar">
-      {({
-        error,
-        data,
-        validationError,
-        isPending,
-        isFailure,
-        isInvalid,
-        isSuccess,
-        isInitial,
-      }) => (
-        <>
-          {/* safely access the data or error by checking the mutually exclusive boolean flags: */}
-          {isSuccess && <p className="success-message">{data}</p>}
-          {isFailure && <p className="error-message">{error.message}</p>}
-          <input type="text" name="name" disabled={isPending} />
-          {isInvalid && (
-            <span className="input-error">{validationError.name}</span>
-          )}
-
-          <button disabled={isPending}>
-            {isPending ? "Submitting..." : "Submit"}
-          </button>
-        </>
-      )}
-    </Form>
-  );
-}
-```
-
-### Context Form
-
-```tsx
-// Example route: /app/auth/signup/SignUpForm.tsx
+// 👉 Define standalone client form component (e.g. /app/auth/signup/SignUpForm.tsx)
 "use client";
 
-import { createForm, Pending, useFormContext } from "react-form-action/client";
-import { signupAction } from "./actions";
+import { Action, Form, useActionContext } from "react-form-action/client";
+import type { PropsWithChildren } from "react";
 
-// This call will succeed only in client component
-const { Form } = createForm(signupAction);
+import { signupAction } from "./action";
 
-function Error() {
-  // read any state from the FormContext:
+function Pending({ children }: PropsWithChildren) {
+  // read any state from the ActionContext:
   const {
     error,
     data,
@@ -233,36 +281,64 @@ function Error() {
     isFailure,
     isInvalid,
     isSuccess,
-    isInitial
-  } = useFormContext();
+    isInitial,
+  } = useActionContext();
 
-  return isFailure && "Failed to submit". // use the error somehow
+  return isPending && children;
 }
 
-// render this form on your RSC page (/app/auth/signup/page.tsx)
+// 💡 render this form on your RSC page (/app/auth/signup/page.tsx)
 export function SignupForm() {
-  // This Form does not use render props.
   return (
-    <Form>
-      <input name="email" />
-      <input name="password" />
+    <Action action={signupAction}>
+      <Form>
+        <input name="email" />
+        <input name="password" />
+      </Form>
+      {/* 🎆 Read the pending state outside the <Form> */}
       <Pending>
-        {/* This renders only when the action is pending. */}
+        {/* This renders only when the action is pending. 😎 */}
         <p>Please wait...</p>
       </Pending>
-    </Form>
+    </Action>
   );
 }
 ```
 
-### `<ZodFieldError>` Component
+### `<Form>` Component
 
-Actions created with `formAction` builder will have the `validationError` of [`ZodFormattedError`](https://zod.dev/ERROR_HANDLING?id=formatting-errors) type.
-To easily access the nested error, use the helper `<ZodFieldError>` component:
+The `<form>` submits the action in `onSubmit` handler to [prevent automatic form reset](https://github.com/facebook/react/issues/29034).
+Pass `autoReset` prop to use the `action` prop instead and keep the default reset.
 
 ```tsx
 "use client";
-import { Form, ZodFieldError } from "react-form-action/client";
+
+import { Action, Form } from "react-form-action/client";
+
+import { updateUser } from "./action";
+
+export function UpdateUserForm() {
+  return (
+    <Action action={updateUser}>
+      <Form autoReset>{/* ... */}</Form>
+    </Action>
+  );
+}
+```
+
+### Context Bound Components `createComponents()`
+
+Use the `createComponents(action)` helper to create components which use the ActionContext and have types bound to the action type.
+
+### `<FielError>` Component
+
+```tsx
+"use client";
+
+// ⚠️ createComponents is usable only in "use client" components
+import { Form, createComponents } from "react-form-action/client";
+
+import { authAction } from "./actions";
 
 export const signUp = authAction
   .input(
@@ -280,51 +356,47 @@ export const signUp = authAction
       })
   )
   .run(async ({ ctx, input }) => {
-    // implementation
+    return null;
   });
+
+// 🌟 The FieldError is now bound do the signUp input schema which allows autocompletion for its "name" prop
+// ⚠️ Usable only with actions created with the formAction builder
+const { FieldError } = createComponents(signUp);
 
 export function SignUpForm() {
   return (
-    <Form action={signUp} initialData="">
-      {({ isInvalid, validationError }) =>
-        {/* Render ZodFieldError behind the isInvalid flag to narrow type (omits the possibility of null) */}
-        isInvalid && (
-          <>
-            {/*
-              When the "name" prop is ommited, the top-level error will be rendered e.g.:
-              "Passwords don't match"
-            */}
-            <ZodFieldError errors={validationError} />
-            {/* Access fields by their name: */}
-            <ZodFieldError errors={validationError} name="password" />
-            {/* Access nested fields by dot access notation: */}
-            <ZodFieldError errors={validationError} name="user.email" />
-          </>
-        )
-      }
-    </Form>
+    <Action action={signUp} initialData={null}>
+      <Form>
+        {/* 1️⃣ When the "name" prop is ommited, the top-level error will be rendered e.g.:
+          "Passwords don't match" */}
+        <FieldError />
+        {/* 2️⃣ Access fields by their name: */}
+        <FieldError name="password" />
+        {/* 3️⃣ Access nested fields by dot access notation: */}
+        <FieldError name="user.email" />
+      </Form>
+    </Action>
   );
 }
 ```
 
-### Bonus `<FormStatus>`
+### `<Pending>`
 
-The `useFormStatus` hook data exposed via render prop:
+Render children when the action is pending:
 
 ```tsx
-import { FormStatus } from "react-form-action/client";
+import { Action, Pending } from "react-form-action/client";
 
-// <FormStatus> alleviates the need to create a separate <SubmitButton> component using the useFormStatus hook
+import { Spinner } from "./components";
 
 return function MyForm() {
   return (
-    <form action={action}>
-      <FormStatus>
-        {({ pending }) => (
-          <button type="submit">{pending ? "Submitting..." : "Submit"} </button>
-        )}
-      </FormStatus>
-    </form>
+    <Action action={action}>
+      {/* 👉 Unlike the React.useFormStatus() hook, we don't need here the <form> element at all. */}
+      <Pending>
+        <Spinner />
+      </Pending>
+    </Action>
   );
 };
 ```

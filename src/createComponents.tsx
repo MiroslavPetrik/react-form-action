@@ -17,11 +17,7 @@ export function createComponents<
   function FieldError({
     name,
   }: PropsWithChildren<{ name?: "" | InferZodErrorPaths<ValidationError> }>) {
-    const { isInvalid, validationError } = useActionContext<
-      Data,
-      Error,
-      ValidationError
-    >();
+    const { isInvalid, validationError } = useActionContext(action);
 
     return isInvalid && <ZodFieldError errors={validationError} name={name} />;
   }

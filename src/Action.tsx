@@ -10,6 +10,7 @@ import type {
   FailureState,
   FormAction,
 } from "./createFormAction";
+import { initial } from "./createFormAction";
 import { useActionState } from "react";
 
 export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
@@ -17,10 +18,6 @@ export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
   initialData: Data;
   permalink?: string;
 }>;
-
-function initial<Data>(data: Data): InitialState<Data> {
-  return { type: "initial", data, error: null, validationError: null };
-}
 
 type ActionStatusFlags<
   T extends ActionState<unknown, unknown, unknown>["type"] | unknown = unknown,
@@ -70,7 +67,9 @@ const ActionContext = createContext<SpreadActionContext | null>(null);
 /**
  * A hook to consume the form action state from the context.
  */
-export function useActionContext<Data, Error, ValidationError>() {
+export function useActionContext<Data, Error, ValidationError>(
+  action?: FormAction<Data, Error, ValidationError>
+) {
   const ctx = use(ActionContext);
 
   if (!ctx) {
