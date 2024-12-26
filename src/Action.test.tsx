@@ -5,7 +5,7 @@ import { act, render, screen } from "@testing-library/react";
 import { z } from "zod";
 import { Action } from "./Action";
 import { formAction } from "./formAction";
-import { ActionForm } from "./ActionForm";
+import { Form } from "./Form";
 
 import { createComponents } from "./createComponents";
 
@@ -26,11 +26,11 @@ describe("Action", () => {
     function SubscribeForm() {
       return (
         <Action action={subscribeAction} initialData={null}>
-          <ActionForm>
+          <Form>
             <input type="text" name="email" data-testid="email" />
             <FieldError name="email" />
             <button type="submit" data-testid="submit" />
-          </ActionForm>
+          </Form>
         </Action>
       );
     }

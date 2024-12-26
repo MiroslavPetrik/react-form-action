@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Action } from "./Action";
 import { formAction } from "./formAction";
 import { Pending } from "./Pending";
-import { ActionForm } from "./ActionForm";
+import { Form } from "./Form";
 
 describe("Pending", () => {
   test("it renders children when the action is pending", async () => {
@@ -27,13 +27,13 @@ describe("Pending", () => {
     function SignUpForm() {
       return (
         <Action action={signUp} initialData={null}>
-          <ActionForm>
+          <Form>
             <input type="text" name="email" data-testid="email" />
             <button type="submit" data-testid="submit" />
             <Pending>
               <p>Please wait...</p>
             </Pending>
-          </ActionForm>
+          </Form>
         </Action>
       );
     }
