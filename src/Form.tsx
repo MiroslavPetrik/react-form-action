@@ -1,11 +1,11 @@
 "use client";
 
 import React, { startTransition } from "react";
-import type { FormHTMLAttributes, FormEvent } from "react";
+import type { JSX, FormEvent } from "react";
 
 import { useActionContext } from "./Action";
 
-export type FormProps = Omit<FormHTMLAttributes<HTMLFormElement>, "action"> & {
+export type FormProps = Omit<JSX.IntrinsicElements["form"], "action"> & {
   /**
    * Opt-in into automatic form reset by using the form "action" prop.
    * By default, the onSubmit with a custom transition which opts-out of the implicit form reset.
