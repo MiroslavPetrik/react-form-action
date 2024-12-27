@@ -328,7 +328,7 @@ export function UpdateUserForm() {
 
 Use the `createComponents(action)` helper to create components which use the ActionContext and have types bound to the action type.
 
-### `<FielError>` Component
+#### `<FielError>` Component
 
 ```tsx
 "use client";
@@ -338,7 +338,7 @@ import { Form, createComponents } from "react-form-action/client";
 
 import { authAction } from "./actions";
 
-export const signUp = authAction
+export const signUpAction = authAction
   .input(
     z
       .object({
@@ -357,13 +357,13 @@ export const signUp = authAction
     return null;
   });
 
-// 🌟 The FieldError is now bound do the signUp input schema which allows autocompletion for its "name" prop
+// 🌟 The FieldError is now bound do the signUpAction input schema which allows autocompletion for its "name" prop
 // ⚠️ Usable only with actions created with the formAction builder
-const { FieldError } = createComponents(signUp);
+const { FieldError } = createComponents(signUpAction);
 
 export function SignUpForm() {
   return (
-    <Action action={signUp} initialData={null}>
+    <Action action={signUpAction} initialData={null}>
       <Form>
         {/* 1️⃣ When the "name" prop is ommited, the top-level error will be rendered e.g.:
           "Passwords don't match" */}
@@ -376,6 +376,48 @@ export function SignUpForm() {
     </Action>
   );
 }
+```
+
+#### `<Success>`
+
+#### When children are JSX
+
+```tsx
+import { Action, createComponents } from "react-form-action/client";
+
+const { Success } = createComponents(signUpAction);
+
+function MyForm() {
+  return (
+    <Action action={signUpAction}>
+      <Success>
+        {/* 👉 The message will render only after the action has succeeded */}
+        <p>You've been signed up!</p>
+      </Success>
+    </Action>
+  );
+}
+```
+
+#### When children is a render prop
+
+```tsx
+import { createComponents } from "react-form-action/client";
+
+const { Success } = createComponents(signUpAction);
+
+function Label({children}: PropsWithChildren) {
+  return (
+    <Success>
+      {({ isSuccess, data }) => (
+        {/* 👉 With a render prop, the children are always mounted, regardles of the isSuccess flag */}
+        <label className={isSuccess ? "green" : ""}>
+          {children}
+        </label>
+      )}
+    </Success>
+  );
+};
 ```
 
 ### `<Pending>`
