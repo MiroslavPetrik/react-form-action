@@ -40,9 +40,6 @@ describe("Action", () => {
     await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
     await act(() => userEvent.click(screen.getByTestId("submit")));
 
-    expect(
-      screen.getByText("Invalid email")
-      // @ts-expect-error
-    ).toBeInTheDocument();
+    expect(screen.getByText("Invalid email")).toBeInTheDocument();
   });
 });

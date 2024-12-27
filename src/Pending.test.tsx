@@ -35,16 +35,12 @@ describe("Pending", () => {
 
       render(<Test />);
 
-      // @ts-expect-error
       expect(screen.getByTestId("wrapper")).toBeEmptyDOMElement();
 
       const submit = screen.getByTestId("submit");
       await act(() => userEvent.click(submit));
 
-      // @ts-expect-error
       expect(screen.getByTestId("wrapper")).not.toBeEmptyDOMElement();
-
-      // @ts-expect-error
       expect(screen.getByText("Please wait...")).toBeInTheDocument();
     });
   });
@@ -73,14 +69,11 @@ describe("Pending", () => {
 
       const submit = screen.getByTestId("submit");
 
-      // @ts-expect-error
       expect(submit).toBeInTheDocument();
-      // @ts-expect-error
       expect(submit).not.toBeDisabled();
 
       await act(() => userEvent.click(submit));
 
-      // @ts-expect-error
       expect(submit).toBeDisabled();
     });
   });

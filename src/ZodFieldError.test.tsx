@@ -24,7 +24,6 @@ describe("ZodFieldError", () => {
 
     render(!result.success && <ZodFieldError errors={result.error.format()} />);
 
-    // @ts-expect-error jest-dom-matcher
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
   });
 
@@ -41,12 +40,11 @@ describe("ZodFieldError", () => {
     render(
       !result.success && (
         <ZodFieldError errors={result.error.format()} name="password" />
-      ),
+      )
     );
 
     expect(
-      screen.getByText("String must contain at least 6 character(s)"),
-      // @ts-expect-error jest-dom-matcher
+      screen.getByText("String must contain at least 6 character(s)")
     ).toBeInTheDocument();
   });
 
@@ -69,13 +67,10 @@ describe("ZodFieldError", () => {
     render(
       !result.success && (
         <ZodFieldError errors={result.error.format()} name="exp.year" />
-      ),
+      )
     );
 
-    expect(
-      screen.getByText("Required"),
-      // @ts-expect-error jest-dom-matcher
-    ).toBeInTheDocument();
+    expect(screen.getByText("Required")).toBeInTheDocument();
   });
 
   test("renders nothing for non-existent (non-error) field", () => {
@@ -88,12 +83,9 @@ describe("ZodFieldError", () => {
         <ZodFieldError errors={result.error.format()} name="invalid">
           {({ errors }) => (errors.length ? "fail" : "success")}
         </ZodFieldError>
-      ),
+      )
     );
 
-    expect(
-      screen.getByText("success"),
-      // @ts-expect-error jest-dom-matcher
-    ).toBeInTheDocument();
+    expect(screen.getByText("success")).toBeInTheDocument();
   });
 });
