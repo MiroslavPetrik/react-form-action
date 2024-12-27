@@ -382,6 +382,8 @@ export function SignUpForm() {
 
 Render children when the action is pending:
 
+#### When children are JSX
+
 ```tsx
 import { Action, Pending } from "react-form-action/client";
 
@@ -392,9 +394,29 @@ return function MyForm() {
     <Action action={action}>
       {/* 👉 Unlike the React.useFormStatus() hook, we don't need here the <form> element at all. */}
       <Pending>
+        {/* 👉 The spinner will UNMOUNT when the action is NOT pending */}
         <Spinner />
       </Pending>
     </Action>
+  );
+};
+```
+
+#### When children is a render prop
+
+```tsx
+import { Pending } from "react-form-action/client";
+
+return function SubmitButton() {
+  return (
+    <Pending>
+      {({ isPending }) => (
+        {/* 👉 With a render prop, the children are always mounted, regardles of the isPending flag */}
+        <button type="submit" disabled={isPending}>
+          {isPending ? "Submitting..." : "Submit"}
+        </button>
+      )}
+    </Pending>
   );
 };
 ```
