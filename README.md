@@ -389,7 +389,7 @@ import { Action, Pending } from "react-form-action/client";
 
 import { Spinner } from "./components";
 
-return function MyForm() {
+function MyForm() {
   return (
     <Action action={action}>
       {/* 👉 Unlike the React.useFormStatus() hook, we don't need here the <form> element at all. */}
@@ -399,7 +399,7 @@ return function MyForm() {
       </Pending>
     </Action>
   );
-};
+}
 ```
 
 #### When children is a render prop
@@ -407,7 +407,7 @@ return function MyForm() {
 ```tsx
 import { Pending } from "react-form-action/client";
 
-return function SubmitButton() {
+function SubmitButton() {
   return (
     <Pending>
       {({ isPending }) => (
