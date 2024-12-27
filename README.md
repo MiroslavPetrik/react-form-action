@@ -59,36 +59,34 @@ export const subscribeAction = formAction
 // app/subscribe/SubscribeForm.tsx
 "use client";
 
-import { Form, Pending, useActionContext } from "react-form-action/client";
+import {
+  Form,
+  Pending,
+  createComponents,
+  useActionContext,
+} from "react-form-action/client";
 
 import { subscribeAction } from "./action";
 
 const { FieldError, Success } = createComponents(subscribeAction);
 
 export function SubscribeForm() {
+  const { isPending, isFailure, error, data } =
+    useActionContext(subscribeAction);
+
   return (
     <Form>
       <Success>
-        {({ isSuccess, data }) =>
-          isSuccess && <p>✅ Email {data} was registered.</p>
-        }
+        <p>✅ Email {data} was registered.</p>
       </Success>
       <input name="email" />
-      {/*💡 The name prop supports autocompletion */}
+      {/*💡 The FieldError "name" prop supports autocompletion */}
       <FieldError name="email" />
-      <SubmitButton />
+      <button type="submit" disabled={isPending}>
+        {isPending ? "🌀 Submitting..." : "Submit"}
+      </button>
       <Pending>Please wait...</Pending>
     </Form>
-  );
-}
-
-function SubmitButton() {
-  const { isPending } = useActionContext();
-
-  return (
-    <button type="submit" disabled={isPending}>
-      {isPending ? "🌀 Submitting..." : "Submit"}
-    </button>
   );
 }
 ```
