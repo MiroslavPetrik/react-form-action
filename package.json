@@ -23,14 +23,14 @@
     ".": {
       "import": "./dist/index.mjs",
       "module": "./dist/index.mjs",
-      "default": "./dist/index.mjs",
-      "types": "./dist/index.d.mts"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./client": {
       "import": "./dist/client.mjs",
       "module": "./dist/client.mjs",
-      "default": "./dist/client.mjs",
-      "types": "./dist/client.d.mts"
+      "types": "./dist/client.d.mts",
+      "default": "./dist/client.mjs"
     }
   },
   "keywords": [
@@ -64,7 +64,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-render-prop-type": "^1.0.0",
-    "tsup": "^7.2.0",
+    "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^1.3.1",
     "zod": "^3.23.8",
