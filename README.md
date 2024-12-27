@@ -59,60 +59,56 @@ export const subscribeAction = formAction
 // app/subscribe/SubscribeForm.tsx
 "use client";
 
-import {
-  Action,
-  Form,
-  Pending,
-  useActionContext,
-} from "react-form-action/client";
+import { Form, Pending, useActionContext } from "react-form-action/client";
 
 import { subscribeAction } from "./action";
 
-const { FieldError } = createComponents(subscribeAction);
+const { FieldError, Success } = createComponents(subscribeAction);
 
 export function SubscribeForm() {
   return (
-    <Action action={subscribeAction} initialData="">
-      <SuccessMessage />
-      <Form>
-        <input name="email" />
-        {/*💡 The name prop supports autocompletion */}
-        <FieldError name="email" />
-      </Form>
+    <Form>
+      <Success>
+        {({ isSuccess, data }) =>
+          isSuccess && <p>✅ Email {data} was registered.</p>
+        }
+      </Success>
+      <input name="email" />
+      {/*💡 The name prop supports autocompletion */}
+      <FieldError name="email" />
       <SubmitButton />
       <Pending>Please wait...</Pending>
-    </Action>
+    </Form>
   );
 }
 
-function SuccessMessage() {
-  // Pass action to cast the type of the "data" value
-  const { isSuccess, data } = useActionContext(subscribeAction);
-
-  return isSuccess && <p>Email {data} was registered.</p>;
-}
-
 function SubmitButton() {
-  // no need for action when reading a generic value
   const { isPending } = useActionContext();
 
   return (
     <button type="submit" disabled={isPending}>
-      {isPending ? "Submitting..." : "Submit"}
+      {isPending ? "🌀 Submitting..." : "Submit"}
     </button>
   );
 }
 ```
 
-#### 3️⃣ Render the form on a Page
+#### 3️⃣ Provide the `<Action>` context on a Page
 
 ```tsx
 // app/subscribe/page.tsx
 
-import { SubscribeForm } from "./SubscribeForm";
+import { Action } from "react-form-action/client";
 
-export function Page() {
-  return <SubscribeForm />;
+import { SubscribeForm } from "./SubscribeForm";
+import { subscribeAction } from "./action";
+
+export default function Page() {
+  return (
+    <Action action={subscribeAction} initialData="">
+      <SubscribeForm />
+    </Action>
+  );
 }
 ```
 
