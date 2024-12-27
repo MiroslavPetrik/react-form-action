@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "happy-dom",
+    environment: "jsdom",
     setupFiles: ["./setup.ts"],
     typecheck: {
       // https://github.com/vitest-dev/vitest/issues/5256#issuecomment-1980431555
