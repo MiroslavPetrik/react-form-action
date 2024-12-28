@@ -32,6 +32,11 @@ type MiddlewareFn<
   NewContext extends Record<string, unknown> = Record<string, unknown>,
 > = ({ ctx }: { ctx: Context }) => Promise<NewContext>;
 
+type ErrorHandler<Context, Err> = (params: {
+  error: unknown;
+  ctx: Context;
+}) => Promise<Err>;
+
 type InitialContext = Record<"formData", FormData>;
 
 /**
@@ -115,7 +120,7 @@ type FormActionBuilder<
    * @returns FormActionBuilder
    */
   error: <Err>(
-    processError: (params: { error: unknown; ctx: Context }) => Err
+    processError: ErrorHandler<Context, Err>
   ) => FormActionBuilder<Schema, Err, Context>;
 };
 
@@ -127,7 +132,7 @@ function formActionBuilder<
 >(
   schema: Schema,
   middleware: MiddlewareFn<Context, NewContext>[] = [],
-  processError?: (params: { error: unknown; ctx: Context }) => Err
+  processError?: ErrorHandler<Context, Err>
 ): FormActionBuilder<Schema, Err, Context> {
   async function createContext(formData: FormData) {
     let ctx = { formData } as Context;
@@ -149,7 +154,7 @@ function formActionBuilder<
           return success(await (action as Action<Data, Context>)({ ctx }));
         } catch (error) {
           if (processError) {
-            return failure(processError({ error, ctx }));
+            return failure(await processError({ error, ctx }));
           }
           // must be handled by error boundary
           throw error;
@@ -184,7 +189,7 @@ function formActionBuilder<
                   return success(await action({ input, ctx }));
                 } catch (error) {
                   if (processError) {
-                    return failure(processError({ error, ctx }));
+                    return failure(await processError({ error, ctx }));
                   }
                   // must be handled by error boundary
                   throw error;
@@ -233,9 +238,7 @@ function formActionBuilder<
         processError
       );
     },
-    error<Err>(
-      processError: (params: { error: unknown; ctx: Context }) => Err
-    ) {
+    error<Err>(processError: ErrorHandler<Context, Err>) {
       return formActionBuilder<Schema, Err, Context>(
         schema,
         middleware,

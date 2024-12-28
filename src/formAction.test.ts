@@ -29,7 +29,7 @@ describe("formAction", () => {
 
   describe("error handling with .error()", () => {
     it("returns failure type", async () => {
-      const withErrorHandler = formAction.error(({ error }) => {
+      const withErrorHandler = formAction.error(async ({ error }) => {
         if (error instanceof Error) {
           return error.message;
         } else {
@@ -64,7 +64,7 @@ describe("formAction", () => {
 
           return { authorized };
         })
-        .error(({ ctx }) => {
+        .error(async ({ ctx }) => {
           if (!ctx.authorized) {
             return "unauthorized";
           } else {
