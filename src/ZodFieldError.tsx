@@ -17,21 +17,39 @@ export type Paths<Err> = {
 export type InferZodErrorPaths<Errors> =
   Errors extends ZodFormattedError<infer E> ? Paths<E> : never;
 
-export type ZodFieldErrorProps<Errors extends ZodFormattedError<any>> = {
+export type ZodFieldErrorProps<
+  Errors extends ZodFormattedError<any>,
+  Name extends "" | InferZodErrorPaths<Errors>,
+> = {
   errors: Errors;
-  name?: "" | InferZodErrorPaths<Errors>;
-} & Partial<RenderProp<{ errors: readonly string[] }>>;
+  name?: Name;
+} & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>;
 
-const noError = Object.freeze({ _errors: Object.freeze([]) });
+export type ZodFieldErrorChildrenProps<Name> = {
+  name: Name;
+  error?: string;
+  errors: readonly string[];
+};
 
-export function ZodFieldError<Errors extends ZodFormattedError<any>>({
+export const noError = Object.freeze({
+  _errors: Object.freeze([] as string[]),
+});
+
+export function ZodFieldError<
+  Errors extends ZodFormattedError<any>,
+  Name extends "" | InferZodErrorPaths<Errors> = "",
+>({
   errors,
-  name = "",
-  children = ({ errors }) => <>{errors[0]}</>,
-}: ZodFieldErrorProps<Errors>) {
+  name = "" as Name,
+  children = ({ error }) => <>{error}</>,
+}: ZodFieldErrorProps<Errors, Name>) {
   // checking length avoids narroving name to never, which happens by truthines check e.g. !!name
   if (name.length === 0) {
-    return children({ errors: errors._errors });
+    return children({
+      name,
+      error: errors._errors[0],
+      errors: errors._errors,
+    });
   }
 
   const path = name.split(SEPARATOR);
@@ -43,5 +61,9 @@ export function ZodFieldError<Errors extends ZodFormattedError<any>>({
     error = error[key] ?? noError;
   }
 
-  return children({ errors: error._errors });
+  return children({
+    name,
+    error: error._errors[0],
+    errors: error._errors,
+  });
 }

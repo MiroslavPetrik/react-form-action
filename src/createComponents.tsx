@@ -2,11 +2,16 @@
 
 import React, { type PropsWithChildren } from "react";
 import type { ZodFormattedError } from "zod";
-import type { RP } from "react-render-prop-type";
+import type { RenderProp, RP } from "react-render-prop-type";
 
 import type { FormAction } from "./createFormAction";
 import { useActionContext } from "./Action";
-import { InferZodErrorPaths, ZodFieldError } from "./ZodFieldError";
+import {
+  ZodFieldErrorChildrenProps,
+  InferZodErrorPaths,
+  ZodFieldError,
+  noError,
+} from "./ZodFieldError";
 
 /**
  * Creates a typed components for actions created with the formAction builder.
@@ -16,12 +21,21 @@ export function createComponents<
   Error,
   ValidationError extends ZodFormattedError<any>,
 >(action: FormAction<Data, Error, ValidationError>) {
-  function FieldError({
+  function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
-  }: PropsWithChildren<{ name?: "" | InferZodErrorPaths<ValidationError> }>) {
+    children,
+  }: { name?: Name } & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>) {
     const { isInvalid, validationError } = useActionContext(action);
 
-    return isInvalid && <ZodFieldError errors={validationError} name={name} />;
+    const defaultChildren = ({ error }: ZodFieldErrorChildrenProps<Name>) =>
+      isInvalid && <>{error}</>;
+
+    return (
+      // @ts-expect-error readonly is fine
+      <ZodFieldError errors={validationError ?? noError} name={name}>
+        {children ?? defaultChildren}
+      </ZodFieldError>
+    );
   }
 
   function Success({
