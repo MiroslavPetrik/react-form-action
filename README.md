@@ -135,7 +135,7 @@ const authAction = formAction
   .use(async ({ ctx: { t } }) =>
     console.log("🎉 context enhanced by previous middlewares 🎉", t)
   )
-  .error(({ error }) => {
+  .error(async ({ error }) => {
     if (error instanceof DbError) {
       return error.custom.code;
     } else {
