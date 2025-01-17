@@ -56,7 +56,7 @@ export const subscribeAction = formAction
 #### 2️⃣ Create a Client Form Component
 
 ```tsx
-// app/subscribe/SubscribeForm.tsx
+// app/subscribe/form.tsx
 "use client";
 
 import {
@@ -98,8 +98,8 @@ export function SubscribeForm() {
 
 import { Action } from "react-form-action/client";
 
-import { SubscribeForm } from "./SubscribeForm";
 import { subscribeAction } from "./action";
+import { SubscribeForm } from "./form";
 
 export default function Page() {
   return (
