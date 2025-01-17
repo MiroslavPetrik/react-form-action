@@ -24,7 +24,7 @@ export function createComponents<
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
     children,
-  }: { name?: Name } & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>) {
+  }: { name: Name } & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>) {
     const { isInvalid, validationError } = useActionContext(action);
 
     const defaultChildren = ({ error }: ZodFieldErrorChildrenProps<Name>) =>

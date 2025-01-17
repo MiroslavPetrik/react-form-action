@@ -22,7 +22,7 @@ export type ZodFieldErrorProps<
   Name extends "" | InferZodErrorPaths<Errors>,
 > = {
   errors: Errors;
-  name?: Name;
+  name: Name;
 } & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>;
 
 export type ZodFieldErrorChildrenProps<Name> = {
@@ -40,7 +40,7 @@ export function ZodFieldError<
   Name extends "" | InferZodErrorPaths<Errors> = "",
 >({
   errors,
-  name = "" as Name,
+  name,
   children = ({ error }) => <>{error}</>,
 }: ZodFieldErrorProps<Errors, Name>) {
   // checking length avoids narroving name to never, which happens by truthines check e.g. !!name

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { ZodFieldError } from "./ZodFieldError";
 
 describe("ZodFieldError", () => {
-  test("renders top level error when the name prop not provided", () => {
+  test("renders the top level error when the name prop is an empty string", () => {
     const passwordForm = z
       .object({
         password: z.string(),
@@ -22,7 +22,11 @@ describe("ZodFieldError", () => {
       confirm: "nay",
     });
 
-    render(!result.success && <ZodFieldError errors={result.error.format()} />);
+    render(
+      !result.success && (
+        <ZodFieldError name="" errors={result.error.format()} />
+      )
+    );
 
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
   });
