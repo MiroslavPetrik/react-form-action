@@ -37,9 +37,13 @@ export type FormAction<
   Error = Data,
   ValidationError = Record<string, never>,
   Payload = FormData,
+  Arguments extends unknown[] = [],
 > = (
-  state: ActionState<Data, Error, ValidationError>,
-  payload: Payload
+  ...args: [
+    ...Arguments,
+    state: ActionState<Data, Error, ValidationError>,
+    payload: Payload,
+  ]
 ) => Promise<ActionState<Data, Error, ValidationError>>;
 
 export function initial<Data>(data: Data): InitialState<Data> {
@@ -51,14 +55,18 @@ export function createFormAction<
   Error = Data,
   ValidationError = Record<string, never>,
   Payload = FormData,
+  Arguments extends [...unknown[]] = [],
 >(
-  formAction: (params: {
-    success: (data: Data) => SuccessState<Data>;
-    failure: (error: Error) => FailureState<Error>;
-    invalid: (
-      validationError: ValidationError
-    ) => InvalidState<ValidationError>;
-  }) => FormAction<Data, Error, ValidationError, Payload>
+  formAction: (
+    params: {
+      success: (data: Data) => SuccessState<Data>;
+      failure: (error: Error) => FailureState<Error>;
+      invalid: (
+        validationError: ValidationError
+      ) => InvalidState<ValidationError>;
+    },
+    ...args: Arguments
+  ) => FormAction<Data, Error, ValidationError, Payload>
 ) {
   function success(data: Data): SuccessState<Data> {
     return { type: "success", data, error: null, validationError: null };
@@ -72,6 +80,22 @@ export function createFormAction<
     return { type: "invalid", data: null, error: null, validationError };
   }
 
-  return (state: ActionState<Data, Error, ValidationError>, payload: Payload) =>
-    formAction({ success, failure, invalid })(state, payload);
+  return (
+    ...args: [
+      ...Arguments,
+      state: ActionState<Data, Error, ValidationError>,
+      payload: Payload,
+    ]
+  ) => {
+    const [payload, state, ...boundArgs] = args.reverse() as [
+      payload: Payload,
+      state: ActionState<Data, Error, ValidationError>,
+      ...Arguments,
+    ];
+
+    return formAction({ success, failure, invalid }, ...boundArgs)(
+      state,
+      payload
+    );
+  };
 }

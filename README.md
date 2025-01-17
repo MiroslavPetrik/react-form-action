@@ -250,6 +250,45 @@ export const updateUser = createFormAction<
 );
 ```
 
+The action creator supports arguments binding:
+
+```ts
+export const updateUser = createFormAction(
+  (
+    { success, failure, invalid },
+    userId: string /* Here you can specify multiple arguments */
+  ) =>
+    async (prevState, formData) => {
+      try {
+        const { name } = updateUserSchema.parse({
+          name: formData.get("name"),
+        });
+
+        const user = await db.users.findById(userId);
+
+        if (!user) {
+          return failure({ message: "No such user." });
+        }
+
+        const updated = await user.update({ name });
+
+        if (updated) {
+          return success({
+            message: "User has been updated.",
+          });
+        } else {
+          return failure({ message: "Failed to update." });
+        }
+      } catch (error) {
+        // handle error
+      }
+    }
+);
+
+// call bind as usuall, the "123" becomes the "userId"
+updateUser.bind(null, "123");
+```
+
 ### Action Context
 
 The `<Action>` components enables you to access your `action`'s state with the `useActionContext()` hook:
