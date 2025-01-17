@@ -1,16 +1,20 @@
-/**
- * This action expects to be passed to useActionState after one .bind() call.
- * @param userId A parameter to bind.
- * @param _state previous state from useActionState
- * @param formData payload
- */
-export function updateUser(
-  userId: string,
-  _state: unknown,
-  formData: FormData
-) {
-  return {
-    userId,
-    name: formData.get("name"),
-  };
-}
+import { createFormAction } from "react-form-action";
+
+type Data = { userId: string };
+
+type Error = { message: string };
+
+// TODO: the generics are not inferring
+export const updateUser = createFormAction<
+  Data,
+  Error,
+  Record<string, never>,
+  FormData,
+  [string]
+>(({ success, failure }, userId: string) => async () => {
+  if (parseInt(userId) === 9) {
+    return success({ userId } as Data);
+  } else {
+    return failure({ message: `User with id=${userId} not found` });
+  }
+});
