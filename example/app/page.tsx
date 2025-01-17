@@ -13,6 +13,9 @@ export default function Home() {
           <li>
             <Link href="/subscribe">Subscribe Form</Link>
           </li>
+          <li>
+            <Link href="/update-user/123">User update (bare react)</Link>
+          </li>
         </ul>
       </main>
     </div>
