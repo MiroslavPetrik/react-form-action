@@ -88,7 +88,7 @@ type FormActionBuilder<
    */
   run: Schema extends ZodTypeAny
     ? <Data>(
-        action: SchemaAction<Data, Context, Schema>
+        action: SchemaAction<Data, Flatten<Context>, Schema>
       ) => (
         state: ActionState<Data, Err, z.inferFormattedError<Schema>>,
         payload: FormData
@@ -100,7 +100,7 @@ type FormActionBuilder<
         >
       >
     : <Data>(
-        action: Action<Data, Context>
+        action: Action<Data, Flatten<Context>>
       ) => (
         state: ActionState<Data, Err>,
         payload: FormData
