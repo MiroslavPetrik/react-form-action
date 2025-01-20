@@ -54,7 +54,7 @@ describe("formAction.input", () => {
   });
 
   describe("result types", () => {
-    const handled = formAction.error(() => {
+    const handled = formAction.error(async () => {
       return { code: "red" } as const;
     });
 
