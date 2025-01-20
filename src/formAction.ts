@@ -128,10 +128,9 @@ function formActionBuilder<
   Schema extends ZodTypeAny | EmptyInput,
   Err = Error,
   Context = InitialContext,
-  NewContext extends Record<string, unknown> = Record<string, unknown>,
 >(
   schema: Schema,
-  middleware: MiddlewareFn<Context, NewContext>[] = [],
+  middleware: MiddlewareFn<Context>[] = [],
   processError?: ErrorHandler<Context, Err>
 ): FormActionBuilder<Schema, Err, Context> {
   async function createContext(formData: FormData) {
@@ -202,7 +201,7 @@ function formActionBuilder<
   return {
     input<T extends ZodTypeAny>(newInput: T) {
       if (schema === emptyInput) {
-        return formActionBuilder<T, Err, Context & NewContext>(
+        return formActionBuilder<T, Err, Context>(
           newInput,
           middleware,
           processError
@@ -219,7 +218,7 @@ function formActionBuilder<
         // @ts-ignore
         const merged = schema.merge(newInput);
 
-        return formActionBuilder<typeof merged, Err, Context & NewContext>(
+        return formActionBuilder<typeof merged, Err, Context>(
           merged,
           middleware
         );

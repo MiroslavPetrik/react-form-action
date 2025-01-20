@@ -110,3 +110,16 @@ describe("formAction.input", () => {
     });
   });
 });
+
+describe("formAction.use", () => {
+  test("it accumulates the context properties with each .use() call", () => {
+    const a = formAction.use(async () => ({ a: "1" }));
+    const b = a.use(async () => ({ b: "2" }));
+
+    expectTypeOf<typeof b.run>().parameter(0).toMatchTypeOf<
+      (params: {
+        ctx: { a: "1"; b: "2"; formData: FormData };
+      }) => Promise<unknown>
+    >;
+  });
+});
