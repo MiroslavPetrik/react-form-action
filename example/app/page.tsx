@@ -14,7 +14,7 @@ export default function Home() {
             <Link href="/subscribe">Subscribe Form</Link>
           </li>
           <li>
-            <Link href="/update-user/123">User update</Link>
+            <Link href="/update-user/9">User update</Link>
           </li>
         </ul>
       </main>
