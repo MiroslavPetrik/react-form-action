@@ -184,6 +184,46 @@ export const signUp = authAction
   });
 ```
 
+#### Args binding
+
+The `formAction` builder supports action arguments binding:
+
+```ts
+// app/update-user/[userId]/action.tsx
+import { formAction } from "react-form-action";
+
+export const updateUser = formAction
+  .args([z.string().uuid()])
+  .run(async ({ args: [userId] }) => {
+    return userId;
+    //     ^? string
+  });
+```
+
+```tsx
+// app/update-user/[userId]/page.tsx
+import { Action } from "react-form-action/client";
+
+import { updateUser } from "./action";
+import { UpdateUserForm } from "./form";
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}) {
+  const { userId } = await params;
+
+  const action = updateUser.bind(null, userId);
+
+  return (
+    <Action action={action} initialData="">
+      <SubscribeForm />
+    </Action>
+  );
+}
+```
+
 ### Action Creator
 
 Low-level action creator, which provides the `success`, `failure` and `invalid` envelope constructors. With the `createFormAction` you must handle the native `FormData` by yourself.
