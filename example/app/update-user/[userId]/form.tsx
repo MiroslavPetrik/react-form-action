@@ -13,10 +13,10 @@ export function UpdateUserForm() {
 
   return (
     <Form>
-      <input name="name" placeholder="Name" defaultValue="Jeff" />
+      <input name="name" placeholder="Name" defaultValue={data?.name ?? ""} />
       <button type="submit">{isPending ? "submitting..." : "Submit"}</button>
       <p>
-        {isSuccess ? `✅ Updated id ${data.userId}` : null}
+        {isSuccess ? `✅ Updated id=${data.userId} to name=${data.name}` : null}
         {isFailure ? `❌ ${error.message}` : null}
       </p>
       <ul>
