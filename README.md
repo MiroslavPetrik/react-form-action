@@ -81,9 +81,12 @@ export function SubscribeForm() {
       <Success>
         <p>✅ Email {data} was registered.</p>
       </Success>
-      <input name="email" />
       {/*💡 The FieldError "name" prop supports autocompletion */}
-      <FieldError name="email" />
+      <FieldError name="email">
+        {({ name, error }) => (
+          <input className={error ? "invalid" : ""} name={name} />
+        )}
+      </FieldError>
       <button type="submit" disabled={isPending}>
         {isPending ? "🌀 Submitting..." : "Submit"}
       </button>
@@ -440,11 +443,12 @@ export function SignUpForm() {
   return (
     <Action action={signUpAction} initialData={null}>
       <Form>
-        {/* 1️⃣ When the "name" prop is ommited, the top-level error will be rendered e.g.:
+        {/* 1️⃣ When the "name" prop is an empty string, the top-level error will be rendered e.g.:
           "Passwords don't match" */}
-        <FieldError />
+        <FieldError name="" />
         {/* 2️⃣ Access fields by their name: */}
         <FieldError name="password" />
+        <FieldError name="confirm" />
         {/* 3️⃣ Access nested fields by dot access notation: */}
         <FieldError name="user.email" />
       </Form>
