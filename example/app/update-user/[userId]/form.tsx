@@ -1,29 +1,23 @@
 "use client";
 
-import { useActionState } from "react";
-import { updateUser } from "./action";
-import { initial } from "react-form-action";
 import Link from "next/link";
+import { Form, useActionContext } from "react-form-action/client";
+import { updateUser } from "./action";
 
-type Props = {
-  userId: string;
-};
+// Drop the first arg, so it fits useAction hook
+const hack = updateUser.bind(null, 0);
 
-export function UpdateUserForm({ userId }: Props) {
-  const action = updateUser.bind(null, userId);
-
-  const [state, formAction, pending] = useActionState(
-    action,
-    initial({ userId: "n/a" }) // TODO(#13)
-  );
+export function UpdateUserForm() {
+  const { isSuccess, isFailure, data, error, isPending } =
+    useActionContext(hack);
 
   return (
-    <form action={formAction}>
-      <input name="name" placeholder="Name" defaultValue="Jeff" />
-      <button type="submit">{pending ? "submitting..." : "Submit"}</button>
+    <Form>
+      <input name="name" placeholder="Name" defaultValue={data?.name ?? ""} />
+      <button type="submit">{isPending ? "submitting..." : "Submit"}</button>
       <p>
-        {state.type === "success" ? `✅ Updated id ${state.data.userId}` : null}
-        {state.type === "failure" ? `❌ ${state.error.message}` : null}
+        {isSuccess ? `✅ Updated id=${data.userId} to name=${data.name}` : null}
+        {isFailure ? `❌ ${error.message}` : null}
       </p>
       <ul>
         <li>
@@ -33,6 +27,6 @@ export function UpdateUserForm({ userId }: Props) {
           <Link href="/update-user/123">Invalid user</Link>
         </li>
       </ul>
-    </form>
+    </Form>
   );
 }

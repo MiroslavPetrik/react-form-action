@@ -6,9 +6,13 @@ import type {
   ZodObject,
   ZodRawShape,
   ZodSchema,
+  ZodTuple,
   ZodEffects,
+  ZodNever,
+  AnyZodTuple,
 } from "zod";
 import {
+  type FormAction,
   createFormAction,
   FailureState,
   InvalidState,
@@ -42,12 +46,21 @@ type InitialContext = Record<"formData", FormData>;
 /**
  * Action without schema has no input.
  */
-type Action<Data, Context> = (params: { ctx: Context }) => Promise<Data>;
+type Action<Data, Context, Args extends AnyZodTuple> = (params: {
+  args: z.infer<Args>;
+  ctx: Context;
+}) => Promise<Data>;
 
 /**
  * Action with schema will get parsed formData as the input.
  */
-type SchemaAction<Data, Context, Schema extends ZodSchema> = (params: {
+type SchemaAction<
+  Data,
+  Context,
+  Args extends AnyZodTuple,
+  Schema extends ZodSchema,
+> = (params: {
+  args: z.infer<Args>;
   ctx: Context;
   input: z.infer<Schema>;
 }) => Promise<Data>;
@@ -58,7 +71,11 @@ type FormActionBuilder<
   Schema extends ZodTypeAny | EmptyInput,
   Err = Error,
   Context = InitialContext,
+  Args extends AnyZodTuple = ZodTuple<[], null>,
 > = {
+  args: <T extends [ZodTypeAny, ...ZodTypeAny[]]>(
+    args: T
+  ) => FormActionBuilder<Schema, Err, Context, ZodTuple<T, null>>;
   input: <T extends ZodTypeAny>(
     newInput: T extends ZodType<infer Out extends Record<string, unknown>>
       ? Schema extends AnyZodEffects
@@ -79,7 +96,8 @@ type FormActionBuilder<
         : never
       : T,
     Err,
-    Context
+    Context,
+    Args
   >;
   /**
    * A finishing call on the builder completing your action.
@@ -88,23 +106,42 @@ type FormActionBuilder<
    */
   run: Schema extends ZodTypeAny
     ? <Data>(
-        action: SchemaAction<Data, Flatten<Context>, Schema>
-      ) => (
-        state: ActionState<Data, Err, z.inferFormattedError<Schema>>,
-        payload: FormData
+        action: SchemaAction<Data, Flatten<Context>, Args, Schema>
+      ) => // NOTE: type is inlined, as the FormAction<...> call hinders the union discrimination by the result type
+      (
+        ...args: [
+          ...z.infer<Args>,
+          state: ActionState<
+            Data,
+            Error,
+            z.inferFormattedError<Schema> & z.inferFormattedError<Args>
+          >,
+          payload: FormData,
+        ]
       ) => Promise<
         Flatten<
-          | InvalidState<z.inferFormattedError<Schema>>
+          | InvalidState<
+              z.inferFormattedError<Schema> & z.inferFormattedError<Args>
+            >
           | FailureState<Err>
           | SuccessState<Data>
         >
       >
     : <Data>(
-        action: Action<Data, Flatten<Context>>
+        action: Action<Data, Flatten<Context>, Args>
       ) => (
-        state: ActionState<Data, Err>,
-        payload: FormData
-      ) => Promise<Flatten<FailureState<Err> | SuccessState<Data>>>;
+        ...args: [
+          ...z.infer<Args>,
+          state: ActionState<Data, Error, z.inferFormattedError<Args>>,
+          payload: FormData,
+        ]
+      ) => Promise<
+        Flatten<
+          | InvalidState<z.inferFormattedError<Args>>
+          | FailureState<Err>
+          | SuccessState<Data>
+        >
+      >;
   /**
    * A chainable context enhancing helper.
    * @param middleware A function which receives the current context, and returns an object which will be added to the context.
@@ -112,7 +149,7 @@ type FormActionBuilder<
    */
   use: <NewContext extends Record<string, unknown>>(
     middleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
-  ) => FormActionBuilder<Schema, Err, Context & NewContext>;
+  ) => FormActionBuilder<Schema, Err, Context & NewContext, Args>;
   /**
    * A chainable error handler to handle errors thrown while running the action passed to .run().
    * It does not receive errors thrown from the context/middleware.
@@ -121,18 +158,20 @@ type FormActionBuilder<
    */
   error: <Err>(
     processError: ErrorHandler<Context, Err>
-  ) => FormActionBuilder<Schema, Err, Context>;
+  ) => FormActionBuilder<Schema, Err, Context, Args>;
 };
 
 function formActionBuilder<
   Schema extends ZodTypeAny | EmptyInput,
   Err = Error,
   Context = InitialContext,
+  Args extends AnyZodTuple = ZodTuple<[], null>,
 >(
   schema: Schema,
   middleware: MiddlewareFn<Context>[] = [],
-  processError?: ErrorHandler<Context, Err>
-): FormActionBuilder<Schema, Err, Context> {
+  processError?: ErrorHandler<Context, Err>,
+  argsSchema?: ZodTuple
+): FormActionBuilder<Schema, Err, Context, Args> {
   async function createContext(formData: FormData) {
     let ctx = { formData } as Context;
 
@@ -144,13 +183,29 @@ function formActionBuilder<
     return ctx;
   }
 
-  const run = <Data>(action: Action<Data, Context>) =>
-    createFormAction<Data, Err>(({ success, failure }) => {
+  const run = <Data>(action: Action<Data, Context, Args>) =>
+    createFormAction<
+      Data,
+      Err,
+      z.inferFormattedError<Args>,
+      FormData,
+      z.infer<Args>
+    >(({ success, failure, invalid }, ...args) => {
       return async (state, formData) => {
         const ctx = await createContext(formData);
 
+        if (argsSchema) {
+          const result = argsSchema.safeParse(args);
+
+          if (!result.success) {
+            return invalid(
+              result.error.format() as unknown as z.inferFormattedError<Args>
+            );
+          }
+        }
+
         try {
-          return success(await (action as Action<Data, Context>)({ ctx }));
+          return success(await action({ args, ctx }));
         } catch (error) {
           if (processError) {
             return failure(await processError({ error, ctx }));
@@ -167,44 +222,63 @@ function formActionBuilder<
   const runSchema =
     schema === emptyInput
       ? undefined
-      : <Data>(action: SchemaAction<Data, Context, RealSchema>) => {
-          return createFormAction<Data, Err, z.inferFormattedError<RealSchema>>(
-            ({ success, failure, invalid }) => {
-              const formDataSchema = zfd.formData(schema);
+      : <Data>(action: SchemaAction<Data, Context, Args, RealSchema>) => {
+          return createFormAction<
+            Data,
+            Err,
+            z.inferFormattedError<RealSchema> & z.inferFormattedError<Args>,
+            FormData,
+            z.infer<Args>
+          >(({ success, failure, invalid }, ...args) => {
+            const formDataSchema = zfd.formData(schema);
 
-              return async (state, formData) => {
-                const ctx = await createContext(formData);
-                const result = formDataSchema.safeParse(formData);
+            return async (state, formData) => {
+              const ctx = await createContext(formData);
+
+              if (argsSchema) {
+                const result = argsSchema.safeParse(args);
 
                 if (!result.success) {
                   return invalid(
-                    result.error.format() as z.inferFormattedError<RealSchema>
+                    result.error.format() as unknown as z.inferFormattedError<Args>
                   );
                 }
+              }
 
-                const input = result.data as z.infer<RealSchema>;
+              const result = formDataSchema.safeParse(formData);
 
-                try {
-                  return success(await action({ input, ctx }));
-                } catch (error) {
-                  if (processError) {
-                    return failure(await processError({ error, ctx }));
-                  }
-                  // must be handled by error boundary
-                  throw error;
+              if (!result.success) {
+                return invalid(
+                  result.error.format() as z.inferFormattedError<RealSchema>
+                );
+              }
+
+              const input = result.data as z.infer<RealSchema>;
+
+              try {
+                return success(await action({ args, input, ctx }));
+              } catch (error) {
+                if (processError) {
+                  return failure(await processError({ error, ctx }));
                 }
-              };
-            }
-          );
+                // must be handled by error boundary
+                throw error;
+              }
+            };
+          });
         };
 
   return {
+    args<Args extends [ZodTypeAny, ...ZodTypeAny[]]>(args: Args) {
+      return formActionBuilder(schema, middleware, processError, z.tuple(args));
+    },
     input<T extends ZodTypeAny>(newInput: T) {
       if (schema === emptyInput) {
-        return formActionBuilder<T, Err, Context>(
+        return formActionBuilder<T, Err, Context, Args>(
           newInput,
           middleware,
-          processError
+          processError,
+          argsSchema
         );
       } else if (schema._def.effect) {
         throw new Error(
@@ -218,7 +292,7 @@ function formActionBuilder<
         // @ts-ignore
         const merged = schema.merge(newInput);
 
-        return formActionBuilder<typeof merged, Err, Context>(
+        return formActionBuilder<typeof merged, Err, Context, Args>(
           merged,
           middleware
         );
@@ -231,21 +305,23 @@ function formActionBuilder<
     use<NewContext extends Record<string, unknown>>(
       newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>
     ) {
-      return formActionBuilder<Schema, Err, Context & NewContext>(
+      return formActionBuilder<Schema, Err, Context & NewContext, Args>(
         schema,
         [...middleware, newMiddleware],
-        processError
+        processError,
+        argsSchema
       );
     },
     error<Err>(processError: ErrorHandler<Context, Err>) {
-      return formActionBuilder<Schema, Err, Context>(
+      return formActionBuilder<Schema, Err, Context, Args>(
         schema,
         middleware,
-        processError
+        processError,
+        argsSchema
       );
     },
     run: schema === emptyInput ? run : runSchema,
-  } as FormActionBuilder<Schema, Err, Context>;
+  } as FormActionBuilder<Schema, Err, Context, Args>;
 }
 
 export const formAction = formActionBuilder(emptyInput);

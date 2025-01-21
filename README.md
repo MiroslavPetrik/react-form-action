@@ -14,6 +14,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 
 - ✅ Define payload schema with the `.input(zodSchema)` to validate the `formData`
 - ✅ Reuse business logic with the `.use(middleware)` method.
+- ✅ Define bindable arguments with the `.args([])` method.
 - ✅ Reuse error handling with the `.error(handler)`.
 
 **React Context access with the `<Action action={myFormAction} />` component**
@@ -182,6 +183,46 @@ export const signUp = authAction
 
     return t("singUp.success");
   });
+```
+
+#### Args binding
+
+The `formAction` builder supports action arguments binding:
+
+```ts
+// app/update-user/[userId]/action.tsx
+import { formAction } from "react-form-action";
+
+export const updateUser = formAction
+  .args([z.string().uuid()])
+  .run(async ({ args: [userId] }) => {
+    return userId;
+    //     ^? string
+  });
+```
+
+```tsx
+// app/update-user/[userId]/page.tsx
+import { Action } from "react-form-action/client";
+
+import { updateUser } from "./action";
+import { UpdateUserForm } from "./form";
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}) {
+  const { userId } = await params;
+
+  const action = updateUser.bind(null, userId);
+
+  return (
+    <Action action={action} initialData="">
+      <SubscribeForm />
+    </Action>
+  );
+}
 ```
 
 ### Action Creator

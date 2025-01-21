@@ -1,6 +1,8 @@
 "use server";
 
+import { Action } from "react-form-action/client";
 import { UpdateUserForm } from "./form";
+import { updateUser } from "./action";
 
 type Props = {
   params: Promise<{ userId: string }>;
@@ -8,6 +10,11 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   const { userId } = await params;
+  const action = updateUser.bind(null, parseInt(userId));
 
-  return <UpdateUserForm userId={userId} />;
+  return (
+    <Action action={action} initialData={{ userId: 0 }}>
+      <UpdateUserForm />
+    </Action>
+  );
 }

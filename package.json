@@ -1,6 +1,6 @@
 {
   "name": "react-form-action",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "description": "State management helpers for the react form actions.",
   "repository": {
     "type": "git",
@@ -17,7 +17,8 @@
     "typecheck": "vitest --typecheck",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "ncu": "ncu --interactive --format group"
+    "ncu": "ncu --interactive --format group",
+    "pub:next": "npm publish --tag next"
   },
   "exports": {
     ".": {

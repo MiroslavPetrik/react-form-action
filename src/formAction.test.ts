@@ -6,11 +6,10 @@ import { zfd } from "zod-form-data";
 
 describe("formAction", () => {
   it("works", async () => {
-    const result = await formAction.run(async () => 42)(
-      // @ts-expect-error undefined is ok, we don't use initial state
-      undefined,
-      undefined
-    );
+    const action = formAction.run(async () => 42);
+
+    // @ts-expect-error undefined is ok, we don't use initial state
+    const result = await action(undefined, undefined);
 
     expect(result).toHaveProperty("type", "success");
     expect(result).toHaveProperty("data", 42);
@@ -86,29 +85,31 @@ describe("formAction", () => {
   describe("context", () => {
     it("has the original formData by default", async () => {
       const handler = vi.fn(async () => {});
+      const action = formAction.run(handler);
 
       const formData = new FormData();
-      await formAction.run(handler)(
-        // @ts-expect-error undefined is ok, we don't use initial state
-        undefined,
-        formData
-      );
+      // @ts-expect-error undefined is ok, we don't use initial state
+      await action(undefined, formData);
 
-      expect(handler).toBeCalledWith({ ctx: { formData } });
+      expect(handler).toBeCalledWith({ args: [], ctx: { formData } });
     });
 
     describe("extending context with .use(middleware)", () => {
       it("aggregates the properties", async () => {
-        const contextual = formAction
-          .use(async () => ({ a: 1 }))
-          .use(async ({ ctx }) => ({ b: "g", c: ctx.a * 3 }));
-
         const handler = vi.fn(async () => {});
 
-        // @ts-expect-error undefined is ok
-        await contextual.run(handler)(undefined, undefined);
+        const contextual = formAction
+          .use(async () => ({ a: 1 }))
+          .use(async ({ ctx }) => ({ b: "g", c: ctx.a * 3 }))
+          .run(handler);
 
-        expect(handler).toBeCalledWith({ ctx: { a: 1, b: "g", c: 3 } });
+        // @ts-expect-error undefined is ok
+        await contextual(undefined, undefined);
+
+        expect(handler).toBeCalledWith({
+          args: [],
+          ctx: { a: 1, b: "g", c: 3 },
+        });
       });
     });
   });
@@ -134,11 +135,8 @@ describe("formAction", () => {
         formData.set("allright", "on");
         formData.set("user.name", "Patrick");
 
-        const result = await nestedObjectInput(
-          // @ts-expect-error undefined is ok
-          undefined,
-          formData
-        );
+        // @ts-expect-error undefined is ok
+        const result = await nestedObjectInput(undefined, formData);
 
         expect(result).toHaveProperty("type", "success");
         expect(result).toHaveProperty("data", {
@@ -154,11 +152,8 @@ describe("formAction", () => {
         formData.set("allright", "9");
         formData.set("user.name", "Pa");
 
-        const result = await nestedObjectInput(
-          // @ts-expect-error undefined is ok
-          undefined,
-          formData
-        );
+        // @ts-expect-error undefined is ok
+        const result = await nestedObjectInput(undefined, formData);
 
         expect(result).toHaveProperty("type", "invalid");
         expect(result).toHaveProperty("data", null);
@@ -218,19 +213,81 @@ describe("formAction", () => {
       formData.set("password", "nbusr123");
       formData.set("confirm", "deusvult");
 
-      const result = await formAction
-        .input(passwordForm)
-        .run(async ({ input }) => {})(
-        // @ts-expect-error
-        undefined,
-        formData
-      );
+      const action = formAction.input(passwordForm).run(async () => {});
+
+      // @ts-expect-error
+      const result = await action(undefined, formData);
 
       expect(result).toHaveProperty("validationError", {
         _errors: [],
         confirm: { _errors: ["Passwords don't match"] },
       });
       expect(result).toHaveProperty("error", null);
+    });
+  });
+
+  describe("args parsing", () => {
+    it("has empty array as args when .args() not called", async () => {
+      const action = formAction.run(async ({ args }) => {
+        return args.length;
+      });
+
+      // @ts-expect-error undefined is ok
+      const result = await action(undefined, undefined);
+
+      expect(result).toHaveProperty("data", 0);
+    });
+
+    it("works with multiple args", async () => {
+      const action = formAction
+        .args([z.string().email(), z.number().min(0)])
+        .run(async ({ args }) => {
+          return args;
+        });
+
+      const bound = action.bind(null, "email@rfa.com", 42);
+
+      // @ts-expect-error undefined is ok
+      const { data } = await bound(undefined, undefined);
+
+      expect(data).toEqual(["email@rfa.com", 42]);
+    });
+
+    it("has validationError when the args don't match schema (no input)", async () => {
+      const action = formAction
+        .args([z.string().uuid()])
+        .run(async ({ args: [userId] }) => {
+          return userId;
+        });
+
+      const boundArgsAction = action.bind(null, "not uuid");
+
+      // @ts-expect-error undefined is ok
+      const result = await boundArgsAction(undefined, undefined);
+
+      expect(result).toHaveProperty("validationError", {
+        _errors: [],
+        0: { _errors: ["Invalid uuid"] },
+      });
+    });
+
+    it("has validationError when the args don't match schema (with input)", async () => {
+      const action = formAction
+        .args([z.string().uuid()])
+        .input(z.object({ test: z.string() }))
+        .run(async ({ args: [userId] }) => {
+          return userId;
+        });
+
+      const boundArgsAction = action.bind(null, "not uuid");
+
+      // @ts-expect-error undefined is ok
+      const result = await boundArgsAction(undefined, undefined);
+
+      expect(result).toHaveProperty("validationError", {
+        _errors: [],
+        0: { _errors: ["Invalid uuid"] },
+      });
     });
   });
 });
