@@ -238,6 +238,21 @@ describe("formAction", () => {
       expect(result).toHaveProperty("data", 0);
     });
 
+    it("works with multiple args", async () => {
+      const action = formAction
+        .args([z.string().email(), z.number().min(0)])
+        .run(async ({ args }) => {
+          return args;
+        });
+
+      const bound = action.bind(null, "email@rfa.com", 42);
+
+      // @ts-expect-error undefined is ok
+      const { data } = await bound(undefined, undefined);
+
+      expect(data).toEqual(["email@rfa.com", 42]);
+    });
+
     it("has validationError when the args don't match schema", async () => {
       const action = formAction
         .args([z.string().uuid()])
