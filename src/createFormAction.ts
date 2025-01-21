@@ -87,11 +87,9 @@ export function createFormAction<
       payload: Payload,
     ]
   ) => {
-    const [payload, state, ...boundArgs] = args.reverse() as [
-      payload: Payload,
-      state: ActionState<Data, Error, ValidationError>,
-      ...Arguments,
-    ];
+    const payload = args.pop() as Payload;
+    const state = args.pop() as ActionState<Data, Error, ValidationError>;
+    const boundArgs = [...args] as Arguments;
 
     return formAction({ success, failure, invalid }, ...boundArgs)(
       state,

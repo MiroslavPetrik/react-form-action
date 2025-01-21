@@ -8,6 +8,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 
 - ✅ Provides envelope objects with `"initial" | "invalid" | "success" | "failure"` response types.
 - ✅ Define generic payload for each of the response type.
+- ✅ Bind action arguments.
 
 **tRPC-like Form Action builder**
 
