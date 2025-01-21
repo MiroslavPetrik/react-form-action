@@ -26,22 +26,11 @@ export type SuccessState<T> = {
   validationError: null;
 };
 
-type Flatten<T> = Identity<{
-  [K in keyof T]: T[K];
-}>;
-
-type Identity<T> = T;
-
-export type ActionState<
-  Data,
-  Error,
-  ValidationError = Record<string, never>,
-> = Flatten<
+export type ActionState<Data, Error, ValidationError = Record<string, never>> =
   | InitialState<Data>
   | InvalidState<ValidationError>
   | FailureState<Error>
-  | SuccessState<Data>
->;
+  | SuccessState<Data>;
 
 export type FormAction<
   Data,
