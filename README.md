@@ -14,6 +14,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 
 - ✅ Define payload schema with the `.input(zodSchema)` to validate the `formData`
 - ✅ Reuse business logic with the `.use(middleware)` method.
+- ✅ Define bindable arguments with the `.args([])` method.
 - ✅ Reuse error handling with the `.error(handler)`.
 
 **React Context access with the `<Action action={myFormAction} />` component**
