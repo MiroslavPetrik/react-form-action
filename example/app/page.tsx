@@ -16,6 +16,9 @@ export default function Home() {
           <li>
             <Link href="/update-user/9">User update</Link>
           </li>
+          <li>
+            <Link href="/signup">Signup Form</Link>
+          </li>
         </ul>
       </main>
     </div>
