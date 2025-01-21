@@ -114,14 +114,14 @@ type FormActionBuilder<
           state: ActionState<
             Data,
             Error,
-            z.inferFormattedError<Schema> | z.inferFormattedError<Args>
+            z.inferFormattedError<Schema> & z.inferFormattedError<Args>
           >,
           payload: FormData,
         ]
       ) => Promise<
         Flatten<
           | InvalidState<
-              z.inferFormattedError<Schema> | z.inferFormattedError<Args>
+              z.inferFormattedError<Schema> & z.inferFormattedError<Args>
             >
           | FailureState<Err>
           | SuccessState<Data>
@@ -187,7 +187,7 @@ function formActionBuilder<
     createFormAction<
       Data,
       Err,
-      Record<string, undefined | string[]>,
+      z.inferFormattedError<Args>,
       FormData,
       z.infer<Args>
     >(({ success, failure, invalid }, ...args) => {
@@ -198,8 +198,9 @@ function formActionBuilder<
           const result = argsSchema.safeParse(args);
 
           if (!result.success) {
-            const err = result.error.flatten();
-            return invalid(err.fieldErrors);
+            return invalid(
+              result.error.format() as unknown as z.inferFormattedError<Args>
+            );
           }
         }
 
@@ -225,7 +226,7 @@ function formActionBuilder<
           return createFormAction<
             Data,
             Err,
-            z.inferFormattedError<RealSchema> | z.inferFormattedError<Args>,
+            z.inferFormattedError<RealSchema> & z.inferFormattedError<Args>,
             FormData,
             z.infer<Args>
           >(({ success, failure, invalid }, ...args) => {

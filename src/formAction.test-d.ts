@@ -146,3 +146,26 @@ describe("formAction.use", () => {
     >;
   });
 });
+
+describe("formAction.args", () => {
+  test("it has index based validationError", async () => {
+    const a = formAction
+      .args([z.number(), z.string()])
+      .run(async ({ args }) => args);
+
+    // @ts-expect-error swapped types
+    const bound = a.bind(null, "1", 2);
+
+    // @ts-expect-error ok
+    const { validationError, type } = await bound(undefined, undefined);
+
+    if (type === "invalid") {
+      expectTypeOf<typeof validationError>().toMatchTypeOf<{
+        _errors: string[];
+        0?: { _errors: string[] };
+        1?: { _errors: string[] };
+        9?: { _errors: string[] }; // any index works hmm
+      }>;
+    }
+  });
+});

@@ -253,7 +253,7 @@ describe("formAction", () => {
       expect(data).toEqual(["email@rfa.com", 42]);
     });
 
-    it("has validationError when the args don't match schema", async () => {
+    it("has validationError when the args don't match schema (no input)", async () => {
       const action = formAction
         .args([z.string().uuid()])
         .run(async ({ args: [userId] }) => {
@@ -266,7 +266,27 @@ describe("formAction", () => {
       const result = await boundArgsAction(undefined, undefined);
 
       expect(result).toHaveProperty("validationError", {
-        0: ["Invalid uuid"],
+        _errors: [],
+        0: { _errors: ["Invalid uuid"] },
+      });
+    });
+
+    it("has validationError when the args don't match schema (with input)", async () => {
+      const action = formAction
+        .args([z.string().uuid()])
+        .input(z.object({ test: z.string() }))
+        .run(async ({ args: [userId] }) => {
+          return userId;
+        });
+
+      const boundArgsAction = action.bind(null, "not uuid");
+
+      // @ts-expect-error undefined is ok
+      const result = await boundArgsAction(undefined, undefined);
+
+      expect(result).toHaveProperty("validationError", {
+        _errors: [],
+        0: { _errors: ["Invalid uuid"] },
       });
     });
   });
