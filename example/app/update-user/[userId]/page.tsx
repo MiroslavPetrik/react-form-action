@@ -13,7 +13,7 @@ export default async function Page({ params }: Props) {
   const action = updateUser.bind(null, parseInt(userId));
 
   return (
-    <Action action={action} initialData={{ userId: 0 }}>
+    <Action action={action} initialData={{ name: "foo", userId: 0 }}>
       <UpdateUserForm />
     </Action>
   );
