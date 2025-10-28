@@ -1,8 +1,9 @@
 import { it, describe, vi, expect } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { zfd } from "zod-form-data";
+
 import { formAction } from "./formAction";
 import { initial } from "./createFormAction";
-import { zfd } from "zod-form-data";
 
 describe("formAction", () => {
   it("works", async () => {
@@ -159,17 +160,22 @@ describe("formAction", () => {
         expect(result).toHaveProperty("data", null);
         expect(result).toHaveProperty("error", null);
         expect(result).toHaveProperty("validationError", {
-          _errors: [],
-          allright: {
-            _errors: [
-              'Invalid literal value, expected "on"',
-              "Invalid literal value, expected undefined",
-            ],
-          },
-          user: {
-            _errors: [],
-            name: {
-              _errors: ["String must contain at least 3 character(s)"],
+          errors: [],
+          properties: {
+            allright: {
+              errors: [
+                'Invalid input: expected \"on\"',
+                "Invalid input: expected undefined",
+                "Invalid input: expected boolean, received string",
+              ],
+            },
+            user: {
+              errors: [],
+              properties: {
+                name: {
+                  errors: ["Too small: expected string to have >=3 characters"],
+                },
+              },
             },
           },
         });
@@ -219,8 +225,10 @@ describe("formAction", () => {
       const result = await action(undefined, formData);
 
       expect(result).toHaveProperty("validationError", {
-        _errors: [],
-        confirm: { _errors: ["Passwords don't match"] },
+        errors: [],
+        properties: {
+          confirm: { errors: ["Passwords don't match"] },
+        },
       });
       expect(result).toHaveProperty("error", null);
     });
@@ -266,8 +274,8 @@ describe("formAction", () => {
       const result = await boundArgsAction(undefined, undefined);
 
       expect(result).toHaveProperty("validationError", {
-        _errors: [],
-        0: { _errors: ["Invalid uuid"] },
+        errors: [],
+        items: [{ errors: ["Invalid UUID"] }],
       });
     });
 
@@ -285,8 +293,8 @@ describe("formAction", () => {
       const result = await boundArgsAction(undefined, undefined);
 
       expect(result).toHaveProperty("validationError", {
-        _errors: [],
-        0: { _errors: ["Invalid uuid"] },
+        errors: [],
+        items: [{ errors: ["Invalid UUID"] }],
       });
     });
   });

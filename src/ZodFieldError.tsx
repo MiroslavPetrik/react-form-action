@@ -1,24 +1,29 @@
 "use client";
 
 import React from "react";
-import type { ZodFormattedError } from "zod";
+import type { $ZodErrorTree } from "zod/v4/core";
 import type { RenderProp } from "react-render-prop-type";
 
 const SEPARATOR = "." as const;
 
-export type Paths<Err> = {
-  [k in keyof Err]: k extends string
-    ? Err[k] extends object
-      ? `${k}${typeof SEPARATOR}${Paths<Err[k]>}`
+export type Paths<
+  Shape extends $ZodErrorTree<object>,
+  Props = Required<NonNullable<Shape["properties"]>>,
+> = {
+  [k in keyof Props]: k extends string
+    ? NonNullable<Props[k]> extends $ZodErrorTree<object>
+      ? "properties" extends keyof NonNullable<Props[k]>
+        ? `${k}${typeof SEPARATOR}${Paths<NonNullable<Props[k]>>}`
+        : k // leaf node
       : k
     : never;
-}[keyof Err];
+}[keyof Props];
 
-export type InferZodErrorPaths<Errors> =
-  Errors extends ZodFormattedError<infer E> ? Paths<E> : never;
+export type InferZodErrorPaths<T> =
+  T extends $ZodErrorTree<object> ? Paths<T> : never;
 
 export type ZodFieldErrorProps<
-  Errors extends ZodFormattedError<any>,
+  Errors extends $ZodErrorTree<any>,
   Name extends "" | InferZodErrorPaths<Errors>,
 > = {
   errors: Errors;
@@ -32,11 +37,11 @@ export type ZodFieldErrorChildrenProps<Name> = {
 };
 
 export const noError = Object.freeze({
-  _errors: Object.freeze([] as string[]),
+  errors: Object.freeze([] as string[]),
 });
 
 export function ZodFieldError<
-  Errors extends ZodFormattedError<any>,
+  Errors extends $ZodErrorTree<object>,
   Name extends "" | InferZodErrorPaths<Errors> = "",
 >({
   errors,
@@ -47,8 +52,8 @@ export function ZodFieldError<
   if (name.length === 0) {
     return children({
       name,
-      error: errors._errors[0],
-      errors: errors._errors,
+      error: errors.errors[0],
+      errors: errors.errors,
     });
   }
 
@@ -57,13 +62,20 @@ export function ZodFieldError<
   let error = errors;
   while (path.length) {
     const key = path.shift()!;
-    // @ts-expect-error static type does not know depth
-    error = error[key] ?? noError;
+
+    if (!error.properties) {
+      // @ts-expect-error non-existent property
+      error = noError;
+      break;
+    }
+
+    // @ts-expect-error accessing properties dynamically
+    error = error["properties"][key] ?? noError;
   }
 
   return children({
     name,
-    error: error._errors[0],
-    errors: error._errors,
+    error: error.errors[0],
+    errors: error.errors,
   });
 }

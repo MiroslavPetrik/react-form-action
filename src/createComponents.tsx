@@ -1,7 +1,7 @@
 "use client";
 
 import React, { type PropsWithChildren } from "react";
-import type { ZodFormattedError } from "zod";
+import type { $ZodErrorTree } from "zod/v4/core";
 import type { RenderProp, RP } from "react-render-prop-type";
 
 import type { FormAction } from "./createFormAction";
@@ -19,7 +19,7 @@ import {
 export function createComponents<
   Data,
   Error,
-  ValidationError extends ZodFormattedError<any>,
+  ValidationError extends $ZodErrorTree<any>,
 >(action: FormAction<Data, Error, ValidationError>) {
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
@@ -31,8 +31,9 @@ export function createComponents<
       isInvalid && <>{error}</>;
 
     return (
-      // @ts-expect-error readonly is fine
+      // @ts-expect-error fine
       <ZodFieldError errors={validationError ?? noError} name={name}>
+        {/** @ts-expect-error fine */}
         {children ?? defaultChildren}
       </ZodFieldError>
     );

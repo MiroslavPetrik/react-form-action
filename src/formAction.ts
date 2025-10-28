@@ -1,15 +1,6 @@
-import { z, ZodFirstPartyTypeKind } from "zod";
-import type {
-  ZodType,
-  ZodTypeAny,
-  objectUtil,
-  ZodObject,
-  ZodRawShape,
-  ZodSchema,
-  ZodTuple,
-  ZodEffects,
-  AnyZodTuple,
-} from "zod";
+import { z } from "zod/v4";
+import type { $ZodErrorTree, $ZodShape } from "zod/v4/core";
+import type { ZodType, ZodObject, ZodTuple } from "zod/v4";
 import {
   createFormAction,
   FailureState,
@@ -44,7 +35,7 @@ type InitialContext = Record<"formData", FormData>;
 /**
  * Action without schema has no input.
  */
-type Action<Data, Context, Args extends AnyZodTuple> = (params: {
+type Action<Data, Context, Args extends ZodTuple> = (params: {
   args: z.infer<Args>;
   ctx: Context;
 }) => Promise<Data>;
@@ -55,42 +46,43 @@ type Action<Data, Context, Args extends AnyZodTuple> = (params: {
 type SchemaAction<
   Data,
   Context,
-  Args extends AnyZodTuple,
-  Schema extends ZodSchema,
+  Args extends ZodTuple,
+  Schema extends ZodType,
 > = (params: {
   args: z.infer<Args>;
   ctx: Context;
   input: z.infer<Schema>;
 }) => Promise<Data>;
 
-type AnyZodEffects = ZodEffects<any, any, any>;
+// type AnyZodEffects = ZodEffects<any, any, any>;
 
 type FormActionBuilder<
-  Schema extends ZodTypeAny | EmptyInput,
+  Schema extends ZodType | EmptyInput,
   TErr = unknown,
   Context = InitialContext,
-  Args extends AnyZodTuple = ZodTuple<[], null>,
+  Args extends ZodTuple = ZodTuple<[], null>,
 > = {
-  args: <T extends [ZodTypeAny, ...ZodTypeAny[]]>(
+  args: <T extends [ZodType, ...ZodType[]]>(
     args: T
   ) => FormActionBuilder<Schema, TErr, Context, ZodTuple<T, null>>;
-  input: <T extends ZodTypeAny>(
-    newInput: T extends ZodType<infer Out extends Record<string, unknown>>
-      ? Schema extends AnyZodEffects
-        ? "Extending schema with effect is not possible."
-        : Schema extends EmptyInput
-          ? T // valid initial schema, possibly with effects
-          : Schema extends ZodTypeAny
-            ? T extends AnyZodEffects
-              ? "Your input contains effect which prevents merging it with the previous inputs."
-              : T
-            : T
-      : "The schema output must be an object."
+  input: <T extends ZodObject>(
+    newInput: T extends ZodObject
+      ? T
+      : // ? Schema extends AnyZodEffects
+        //   ? "Extending schema with effect is not possible."
+        //   : Schema extends EmptyInput
+        //     ? T // valid initial schema, possibly with effects
+        //     : Schema extends ZodType
+        //       ? T extends AnyZodEffects
+        //         ? "Your input contains effect which prevents merging it with the previous inputs."
+        //         : T
+        //       : T
+        "The schema output must be an object."
   ) => FormActionBuilder<
-    Schema extends ZodObject<infer O1 extends ZodRawShape>
+    Schema extends ZodObject<infer O1 extends $ZodShape>
       ? // merging won't work for effects, but that is sanitized in input parameter
-        T extends ZodObject<infer O2 extends ZodRawShape>
-        ? ZodObject<objectUtil.extendShape<O1, O2>>
+        T extends ZodObject<infer O2 extends $ZodShape>
+        ? ZodObject<O1 & O2>
         : never
       : T,
     TErr,
@@ -102,7 +94,7 @@ type FormActionBuilder<
    * @param action async function to execute. It will receive parsed formData as input, when the builder was initialized with a schema.
    * @returns runnable server action exportable from a module.
    */
-  run: Schema extends ZodTypeAny
+  run: Schema extends ZodType
     ? <Data>(
         action: SchemaAction<Data, Flatten<Context>, Args, Schema>
       ) => // NOTE: type is inlined, as the FormAction<...> call hinders the union discrimination by the result type
@@ -112,14 +104,14 @@ type FormActionBuilder<
           state: ActionState<
             Data,
             TErr,
-            z.inferFormattedError<Schema> & z.inferFormattedError<Args>
+            $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<z.output<Args>>
           >,
           payload: FormData,
         ]
       ) => Promise<
         Flatten<
           | InvalidState<
-              z.inferFormattedError<Schema> & z.inferFormattedError<Args>
+              $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<z.output<Args>>
             >
           | FailureState<TErr>
           | SuccessState<Data>
@@ -130,12 +122,12 @@ type FormActionBuilder<
       ) => (
         ...args: [
           ...z.infer<Args>,
-          state: ActionState<Data, TErr, z.inferFormattedError<Args>>,
+          state: ActionState<Data, TErr, $ZodErrorTree<z.output<Args>>>,
           payload: FormData,
         ]
       ) => Promise<
         Flatten<
-          | InvalidState<z.inferFormattedError<Args>>
+          | InvalidState<$ZodErrorTree<z.output<Args>>>
           | FailureState<TErr>
           | SuccessState<Data>
         >
@@ -160,10 +152,10 @@ type FormActionBuilder<
 };
 
 function formActionBuilder<
-  Schema extends ZodTypeAny | EmptyInput,
+  Schema extends ZodType | EmptyInput,
   TErr = unknown,
   Context = InitialContext,
-  Args extends AnyZodTuple = ZodTuple<[], null>,
+  Args extends ZodTuple = ZodTuple<[], null>,
 >(
   schema: Schema,
   middleware: MiddlewareFn<Context>[] = [],
@@ -185,7 +177,7 @@ function formActionBuilder<
     createFormAction<
       Data,
       TErr,
-      z.inferFormattedError<Args>,
+      $ZodErrorTree<z.output<Args>>,
       FormData,
       z.infer<Args>
     >(({ success, failure, invalid }, ...args) => {
@@ -197,7 +189,7 @@ function formActionBuilder<
 
           if (!result.success) {
             return invalid(
-              result.error.format() as unknown as z.inferFormattedError<Args>
+              z.treeifyError(result.error) as $ZodErrorTree<z.output<Args>>
             );
           }
         }
@@ -224,7 +216,7 @@ function formActionBuilder<
           return createFormAction<
             Data,
             TErr,
-            z.inferFormattedError<RealSchema> & z.inferFormattedError<Args>,
+            $ZodErrorTree<z.output<RealSchema>> | $ZodErrorTree<z.output<Args>>,
             FormData,
             z.infer<Args>
           >(({ success, failure, invalid }, ...args) => {
@@ -238,7 +230,9 @@ function formActionBuilder<
 
                 if (!result.success) {
                   return invalid(
-                    result.error.format() as unknown as z.inferFormattedError<Args>
+                    z.treeifyError(result.error) as $ZodErrorTree<
+                      z.output<Args>
+                    >
                   );
                 }
               }
@@ -247,7 +241,9 @@ function formActionBuilder<
 
               if (!result.success) {
                 return invalid(
-                  result.error.format() as z.inferFormattedError<RealSchema>
+                  z.treeifyError(result.error) as $ZodErrorTree<
+                    z.output<RealSchema>
+                  >
                 );
               }
 
@@ -267,10 +263,10 @@ function formActionBuilder<
         };
 
   return {
-    args<Args extends [ZodTypeAny, ...ZodTypeAny[]]>(args: Args) {
+    args<Args extends [ZodType, ...ZodType[]]>(args: Args) {
       return formActionBuilder(schema, middleware, processError, z.tuple(args));
     },
-    input<TInput extends ZodTypeAny>(newInput: TInput) {
+    input<TInput extends ZodObject>(newInput: TInput) {
       if (schema === emptyInput) {
         return formActionBuilder<TInput, TErr, Context, Args>(
           newInput,
@@ -278,17 +274,19 @@ function formActionBuilder<
           processError,
           argsSchema
         );
-      } else if (schema._def.effect) {
+      } else if (schema._zod.def.checks) {
         throw new Error(
           "Previous input is not augmentable because it contains an effect."
         );
-      } else if (newInput._def.effect) {
+      } else if (newInput._zod.def.checks) {
         throw new Error(
           "Your input contains effect which prevents merging it with the previous inputs."
         );
-      } else if (schema._def.typeName === ZodFirstPartyTypeKind.ZodObject) {
-        // @ts-ignore
-        const merged = schema.merge(newInput);
+      } else if (schema._zod.def.type === "object") {
+        const merged = z.object({
+          ...(schema as ZodObject).shape,
+          ...newInput.shape,
+        });
 
         return formActionBuilder<typeof merged, TErr, Context, Args>(
           merged,

@@ -2,7 +2,8 @@ import React from "react";
 import { describe, test, expect } from "vitest";
 import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
-import { z } from "zod";
+import { z } from "zod/v4";
+
 import { Action } from "./Action";
 import { formAction } from "./formAction";
 import { Form } from "./Form";
@@ -40,6 +41,6 @@ describe("Action", () => {
     await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
     await act(() => userEvent.click(screen.getByTestId("submit")));
 
-    expect(screen.getByText("Invalid email")).toBeInTheDocument();
+    expect(screen.getByText("Invalid email address")).toBeInTheDocument();
   });
 });

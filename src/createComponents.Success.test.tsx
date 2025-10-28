@@ -2,7 +2,7 @@ import React from "react";
 import { describe, test, expect } from "vitest";
 import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { createComponents } from "./createComponents";
 import { formAction } from "./formAction";

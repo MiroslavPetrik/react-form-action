@@ -1,5 +1,7 @@
 import { expectTypeOf, describe, test } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { $ZodErrorTree } from "zod/v4/core";
+
 import { formAction } from "./formAction";
 
 describe("formAction.input", () => {
@@ -74,7 +76,7 @@ describe("formAction.input", () => {
             type: "invalid";
             data: null;
             error: null;
-            validationError: z.inferFormattedError<typeof noArgs>;
+            validationError: $ZodErrorTree<z.output<typeof noArgs>>;
           }
         | {
             type: "failure";
@@ -125,8 +127,8 @@ describe("formAction.input", () => {
             data: null;
             error: null;
             validationError:
-              | z.inferFormattedError<typeof schema>
-              | z.inferFormattedError<typeof noArgs>;
+              | $ZodErrorTree<z.output<typeof schema>>
+              | $ZodErrorTree<z.output<typeof noArgs>>;
           }
       >();
     });
@@ -161,10 +163,23 @@ describe("formAction.args", () => {
 
     if (type === "invalid") {
       expectTypeOf<typeof validationError>().toMatchTypeOf<{
-        _errors: string[];
-        0?: { _errors: string[] };
-        1?: { _errors: string[] };
-        9?: { _errors: string[] }; // any index works hmm
+        errors: string[];
+        items:
+          | [
+              (
+                | {
+                    errors: string[];
+                  }
+                | undefined
+              )?,
+              (
+                | {
+                    errors: string[];
+                  }
+                | undefined
+              )?,
+            ]
+          | undefined;
       }>;
     }
   });

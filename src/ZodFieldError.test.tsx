@@ -2,7 +2,7 @@ import React from "react";
 import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { ZodFieldError } from "./ZodFieldError";
 
@@ -24,7 +24,7 @@ describe("ZodFieldError", () => {
 
     render(
       !result.success && (
-        <ZodFieldError name="" errors={result.error.format()} />
+        <ZodFieldError name="" errors={z.treeifyError(result.error)} />
       )
     );
 
@@ -43,12 +43,12 @@ describe("ZodFieldError", () => {
 
     render(
       !result.success && (
-        <ZodFieldError errors={result.error.format()} name="password" />
+        <ZodFieldError errors={z.treeifyError(result.error)} name="password" />
       )
     );
 
     expect(
-      screen.getByText("String must contain at least 6 character(s)")
+      screen.getByText("Too small: expected string to have >=6 characters")
     ).toBeInTheDocument();
   });
 
@@ -70,11 +70,13 @@ describe("ZodFieldError", () => {
 
     render(
       !result.success && (
-        <ZodFieldError errors={result.error.format()} name="exp.year" />
+        <ZodFieldError errors={z.treeifyError(result.error)} name="exp.year" />
       )
     );
 
-    expect(screen.getByText("Required")).toBeInTheDocument();
+    expect(
+      screen.getByText("Invalid input: expected number, received undefined")
+    ).toBeInTheDocument();
   });
 
   test("renders nothing for non-existent (non-error) field", () => {
@@ -83,8 +85,8 @@ describe("ZodFieldError", () => {
 
     render(
       !result.success && (
-        // @ts-expect-error deliberate invalid
-        <ZodFieldError errors={result.error.format()} name="invalid">
+        // @ts-expect-error intentional invalid name
+        <ZodFieldError errors={z.treeifyError(result.error)} name="invalid">
           {({ errors }) => (errors.length ? "fail" : "success")}
         </ZodFieldError>
       )
