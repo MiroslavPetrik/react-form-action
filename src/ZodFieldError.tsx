@@ -2,7 +2,6 @@
 
 import React from "react";
 import type { $ZodErrorTree } from "zod/v4/core";
-import type { RenderProp } from "react-render-prop-type";
 
 const SEPARATOR = "." as const;
 
@@ -28,7 +27,8 @@ export type ZodFieldErrorProps<
 > = {
   errors: Errors;
   name: Name;
-} & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>;
+  children?: (props: ZodFieldErrorChildrenProps<Name>) => React.ReactNode;
+};
 
 export type ZodFieldErrorChildrenProps<Name> = {
   name: Name;

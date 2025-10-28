@@ -2,7 +2,6 @@
 
 import React, { type PropsWithChildren } from "react";
 import type { $ZodErrorTree } from "zod/v4/core";
-import type { RenderProp, RP } from "react-render-prop-type";
 
 import type { FormAction } from "./createFormAction";
 import { useActionContext } from "./Action";
@@ -24,7 +23,10 @@ export function createComponents<
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
     children,
-  }: { name: Name } & Partial<RenderProp<ZodFieldErrorChildrenProps<Name>>>) {
+  }: {
+    name: Name;
+    children?: (props: ZodFieldErrorChildrenProps<Name>) => React.ReactNode;
+  }) {
     const { isInvalid, validationError } = useActionContext(action);
 
     const defaultChildren = ({ error }: ZodFieldErrorChildrenProps<Name>) =>
@@ -43,10 +45,13 @@ export function createComponents<
     children,
   }:
     | PropsWithChildren
-    | RP<
-        | { isSuccess: false; data: Data | null }
-        | { isSuccess: true; data: Data }
-      >) {
+    | {
+        children?: (
+          props:
+            | { isSuccess: false; data: Data | null }
+            | { isSuccess: true; data: Data }
+        ) => React.ReactNode;
+      }) {
     const { isSuccess, data } = useActionContext(action);
 
     if (typeof children === "function") {

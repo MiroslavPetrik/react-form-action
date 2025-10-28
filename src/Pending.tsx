@@ -1,5 +1,4 @@
 import type { PropsWithChildren } from "react";
-import type { RP } from "react-render-prop-type";
 
 import { useActionContext } from "./Action";
 
@@ -8,7 +7,9 @@ import { useActionContext } from "./Action";
  */
 export function Pending({
   children,
-}: PropsWithChildren | RP<{ isPending: boolean }>) {
+}:
+  | PropsWithChildren
+  | { children?: (props: { isPending: boolean }) => React.ReactNode }) {
   const { isPending } = useActionContext();
 
   if (typeof children === "function") {
