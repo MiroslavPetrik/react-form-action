@@ -193,32 +193,37 @@ export const signUp = authAction
 The `formAction` builder supports action arguments binding:
 
 ```ts
-// app/update-user/[userId]/action.tsx
+// app/[locale]/update-user/[userId]/action.tsx
 import { formAction } from "react-form-action";
 
 export const updateUser = formAction
-  .args([z.string().uuid()])
+  .args([z.string().uuid(), z.enum("fr", "en")])
   .run(async ({ args: [userId] }) => {
     return userId;
     //     ^? string
+  })
+  .error(({ args: [_, locale] }) => {
+    return locale === "fr"
+      ? "Échec de la mise à jour de l'utilisateur"
+      : "Failed to update user";
   });
 ```
 
 ```tsx
-// app/update-user/[userId]/page.tsx
+// app/[locale]/update-user/[userId]/page.tsx
 import { Action } from "react-form-action/client";
 
+import { locale as localeParam } from "next/root-params";
 import { updateUser } from "./action";
 import { UpdateUserForm } from "./form";
 
 export default function Page({
   params,
-}: {
-  params: Promise<{ userId: string }>;
-}) {
+}: PageProps<"/[locale]/update-user/[userId]">) {
+  const locale = await localeParam();
   const { userId } = await params;
 
-  const action = updateUser.bind(null, userId);
+  const action = updateUser.bind(null, userId, locale);
 
   return (
     <Action action={action} initialData="">

@@ -81,6 +81,25 @@ describe("formAction", () => {
       expect(failedUnauthorized).toHaveProperty("type", "failure");
       expect(failedUnauthorized).toHaveProperty("error", "unauthorized");
     });
+
+    it("receives args", async () => {
+      const i18nAction = formAction
+        .args([z.string()])
+        .error(async ({ args: [lang] }) => {
+          return lang === "fr" ? "erreur" : "error";
+        })
+        .run(async () => {
+          throw new Error();
+        });
+
+      const frAction = i18nAction.bind(null, "fr");
+
+      // @ts-expect-error undefined is ok, we don't use initial state
+      const result = await frAction(undefined, new FormData());
+
+      expect(result).toHaveProperty("type", "failure");
+      expect(result).toHaveProperty("error", "erreur");
+    });
   });
 
   describe("context", () => {
