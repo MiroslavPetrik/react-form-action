@@ -23,7 +23,7 @@ describe("formAction", () => {
     });
 
     await expect(() =>
-      action(initial(null), new FormData())
+      action(initial(null), new FormData()),
     ).rejects.toThrowError();
   });
 
@@ -51,7 +51,7 @@ describe("formAction", () => {
       });
       const failedWithNumber = await throwsNumber(
         initial(null),
-        new FormData()
+        new FormData(),
       );
       expect(failedWithNumber).toHaveProperty("type", "failure");
       expect(failedWithNumber).toHaveProperty("error", "unknown");
@@ -119,7 +119,7 @@ describe("formAction", () => {
     const action = formAction.input(
       z.object({
         allright: zfd.checkbox(),
-      })
+      }),
     );
 
     describe("formData parsing", () => {
@@ -127,7 +127,7 @@ describe("formAction", () => {
         .input(
           z.object({
             user: z.object({ name: z.string().min(3) }),
-          })
+          }),
         )
         .run(async ({ input }) => input);
 
@@ -191,11 +191,11 @@ describe("formAction", () => {
 
       const result = await foo.run(
         async ({ input: { age, allright } }) =>
-          `You are ${age} y.o. and feeling ${allright ? "ok" : "ko"}`
+          `You are ${age} y.o. and feeling ${allright ? "ok" : "ko"}`,
       )(
         // @ts-expect-error undefined is ok
         undefined,
-        formData
+        formData,
       );
 
       expect(result).toHaveProperty("type", "success");
@@ -248,7 +248,7 @@ describe("formAction", () => {
 
     it("works with multiple args", async () => {
       const action = formAction
-        .args([z.string().email(), z.number().min(0)])
+        .args([z.email(), z.number().min(0)])
         .run(async ({ args }) => {
           return args;
         });

@@ -15,8 +15,8 @@ describe("Action", () => {
     const subscribeAction = formAction
       .input(
         z.object({
-          email: z.string().email(),
-        })
+          email: z.email(),
+        }),
       )
       .run(async () => {
         return null;

@@ -49,7 +49,7 @@ import { formAction } from "react-form-action";
 import { z } from "zod";
 
 export const subscribeAction = formAction
-  .input(z.object({ email: z.string().email() }))
+  .input(z.object({ email: z.email() }))
   .run(async ({ input }) => {
     return input.email;
   });
@@ -138,7 +138,7 @@ const i18nMiddleware = async () => {
 const authAction = formAction
   .use(i18nMiddleware)
   .use(async ({ ctx: { t } }) =>
-    console.log("🎉 context enhanced by previous middlewares 🎉", t)
+    console.log("🎉 context enhanced by previous middlewares 🎉", t),
   )
   .error(async ({ error }) => {
     if (error instanceof DbError) {
@@ -151,7 +151,7 @@ const authAction = formAction
   });
 
 export const signIn = authAction
-  .input(z.object({ email: z.string().email() }))
+  .input(z.object({ email: z.email() }))
   // 🎉 extend the previous input (only without refinements and transforms)
   .input(z.object({ password: z.string() }))
   .run(async ({ ctx: { t }, input: { email, password } }) => {
@@ -166,14 +166,14 @@ export const signUp = authAction
   .input(
     z
       .object({
-        email: z.string().email(),
+        email: z.email(),
         password: z.string(),
         confirm: z.string(),
       })
       .refine((data) => data.password === data.confirm, {
         message: "Passwords don't match",
         path: ["confirm"],
-      })
+      }),
   ) // if using refinement, only one input call is permited, as schema with ZodEffects is not extendable.
   .run(async ({ ctx: { t }, input: { email, password } }) => {
     // 🎉 passwords match!
@@ -291,7 +291,7 @@ export const updateUser = createFormAction<
 
       return failure({ message: "Failed to update user." });
     }
-  }
+  },
 );
 ```
 
@@ -301,7 +301,7 @@ The action creator supports arguments binding:
 export const updateUser = createFormAction(
   (
     { success, failure, invalid },
-    userId: string /* Here you can specify multiple arguments */
+    userId: string /* Here you can specify multiple arguments */,
   ) =>
     async (prevState, formData) => {
       try {
@@ -327,7 +327,7 @@ export const updateUser = createFormAction(
       } catch (error) {
         // handle error
       }
-    }
+    },
 );
 
 // call bind as usuall, the "123" becomes the "userId"
@@ -421,7 +421,7 @@ export const signUpAction = authAction
     z
       .object({
         user: z.object({
-          email: z.string().email(),
+          email: z.email(),
           name: z.string(),
         }),
         password: z.string().min(8),
@@ -429,7 +429,7 @@ export const signUpAction = authAction
       })
       .refine((data) => data.password === data.confirm, {
         message: "Passwords don't match",
-      })
+      }),
   )
   .run(async ({ ctx, input }) => {
     return null;

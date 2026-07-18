@@ -8,7 +8,7 @@ import { z } from "zod";
 export const signupSchema = z
   .object({
     user: z.object({
-      email: z.string().email(),
+      email: z.email(),
     }),
     password: z.string().min(8),
     confirm: z.string(),

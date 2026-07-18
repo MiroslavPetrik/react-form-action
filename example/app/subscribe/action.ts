@@ -6,7 +6,7 @@ import { z } from "zod";
 const users = new Set<string>();
 
 export const subscribeAction = formAction
-  .input(z.object({ email: z.string().email() }))
+  .input(z.object({ email: z.email() }))
   .error(async ({ error }) => {
     if (error instanceof Error) {
       return error.message;

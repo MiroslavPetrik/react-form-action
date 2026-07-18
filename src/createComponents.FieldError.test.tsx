@@ -11,7 +11,7 @@ import { Form } from "./Form";
 
 describe("FieldError", () => {
   const action = formAction
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: z.email() }))
     .run(async () => {
       return "success";
     });
