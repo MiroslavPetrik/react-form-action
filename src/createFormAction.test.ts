@@ -7,7 +7,7 @@ describe("createFormAction", () => {
       const action = createFormAction(
         ({ success }, userId: number) =>
           async () =>
-            success({ userId })
+            success({ userId }),
       );
 
       const boundAction = action.bind(null, 9);
@@ -24,10 +24,12 @@ describe("createFormAction", () => {
       const action = createFormAction(
         ({ success }, ...args: [number, string, boolean]) =>
           async () =>
-            success({ args })
+            success({ args }),
       );
 
-      const boundAction = action.bind(null, 9, "hello", true);
+      const args = [9, "hello", true] as const;
+
+      const boundAction = action.bind(null, ...args);
 
       expect(await boundAction(initial(undefined), new FormData())).toEqual({
         type: "success",

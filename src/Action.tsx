@@ -12,11 +12,26 @@ import type {
 } from "./createFormAction";
 import { initial } from "./createFormAction";
 
-export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
-  action: FormAction<Data, Error, ValidationError>;
-  initialData: Data;
-  permalink?: string;
-}>;
+export type ActionProps<
+  Data,
+  Error,
+  ValidationError,
+  Arguments extends unknown[] = [],
+> = PropsWithChildren<
+  Arguments extends [unknown]
+    ? {
+        action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
+        args: Arguments;
+        initialData: Data;
+        permalink?: string;
+      }
+    : {
+        action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
+        initialData: Data;
+        args?: undefined;
+        permalink?: string;
+      }
+>;
 
 type ActionStatusFlags<
   T extends ActionState<unknown, unknown, unknown>["type"] | unknown = unknown,
@@ -70,9 +85,8 @@ export function useActionContext<
   Data,
   Error,
   ValidationError,
-  Payload = FormData,
   Args extends unknown[] = [],
->(action?: FormAction<Data, Error, ValidationError, Payload, Args>) {
+>(action?: FormAction<Data, Error, ValidationError, FormData, Args>) {
   const ctx = use(ActionContext);
 
   if (!ctx) {
@@ -85,14 +99,26 @@ export function useActionContext<
   return ctx as SpreadActionContext<Data, Error, ValidationError>;
 }
 
-export function Action<Data, Error, ValidationError>({
+export function Action<
+  Data,
+  Error,
+  ValidationError,
+  Args extends unknown[] = [],
+>({
   children,
   action: formAction,
   initialData,
+  args,
   permalink,
-}: ActionProps<Data, Error, ValidationError>) {
+}: ActionProps<Data, Error, ValidationError, Args>) {
+  type NoArgsAction = FormAction<Data, Error, ValidationError, FormData, []>;
+
+  const argAction = (
+    args ? formAction.bind(null, ...args) : formAction
+  ) as NoArgsAction;
+
   const [state, action, isPending] = useActionState(
-    formAction,
+    argAction,
     initial(initialData),
     permalink,
   );

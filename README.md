@@ -223,10 +223,8 @@ export default function Page({
   const locale = await localeParam();
   const { userId } = await params;
 
-  const action = updateUser.bind(null, userId, locale);
-
   return (
-    <Action action={action} initialData="">
+    <Action action={updateUser} args={[await localeParam()]} initialData="">
       <SubscribeForm />
     </Action>
   );
