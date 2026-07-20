@@ -212,24 +212,19 @@ export const updateUser = formAction
 ```tsx
 // app/[locale]/update-user/[userId]/page.tsx
 import { Action } from "react-form-action/client";
+import { locale } from "next/root-params";
 
-import { locale as localeParam } from "next/root-params";
 import { updateUser } from "./action";
 import { UpdateUserForm } from "./form";
 
 export default function Page({
   params,
 }: PageProps<"/[locale]/update-user/[userId]">) {
-  const locale = await localeParam();
   const { userId } = await params;
 
   return (
-    <Action
-      action={updateUser}
-      args={[userId, await localeParam()]}
-      initialData=""
-    >
-      <SubscribeForm />
+    <Action action={updateUser} args={[userId, await locale()]} initialData="">
+      <UpdateUserForm />
     </Action>
   );
 }
