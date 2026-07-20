@@ -51,7 +51,7 @@ export function createComponents<
         children?: (
           props:
             | { isSuccess: false; data: Data | null }
-            | { isSuccess: true; data: Data }
+            | { isSuccess: true; data: Data },
         ) => React.ReactNode;
       }) {
     const { isSuccess, data } = useActionContext(action);
@@ -68,8 +68,33 @@ export function createComponents<
     return isSuccess && children;
   }
 
+  function Invalid({
+    children,
+  }:
+    | PropsWithChildren
+    | {
+        children?: (
+          props:
+            | { isInvalid: false; validationError: null }
+            | { isInvalid: true; validationError: ValidationError },
+        ) => React.ReactNode;
+      }) {
+    const { isInvalid, validationError } = useActionContext(action);
+
+    if (typeof children === "function") {
+      if (isInvalid) {
+        return children({ isInvalid, validationError });
+      } else {
+        return children({ isInvalid, validationError });
+      }
+    }
+
+    return isInvalid && children;
+  }
+
   return {
     FieldError,
     Success,
+    Invalid,
   };
 }
