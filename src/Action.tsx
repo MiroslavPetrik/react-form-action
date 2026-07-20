@@ -1,7 +1,7 @@
 "use client";
 
 import React, { type PropsWithChildren } from "react";
-import { createContext, use } from "react";
+import { useActionState, createContext, use } from "react";
 import type {
   ActionState,
   InitialState,
@@ -11,7 +11,6 @@ import type {
   FormAction,
 } from "./createFormAction";
 import { initial } from "./createFormAction";
-import { useActionState } from "react";
 
 export type ActionProps<Data, Error, ValidationError> = PropsWithChildren<{
   action: FormAction<Data, Error, ValidationError>;
@@ -67,14 +66,18 @@ const ActionContext = createContext<SpreadActionContext | null>(null);
 /**
  * A hook to consume the form action state from the context.
  */
-export function useActionContext<Data, Error, ValidationError>(
-  action?: FormAction<Data, Error, ValidationError>
-) {
+export function useActionContext<
+  Data,
+  Error,
+  ValidationError,
+  Payload = FormData,
+  Args extends unknown[] = [],
+>(action?: FormAction<Data, Error, ValidationError, Payload, Args>) {
   const ctx = use(ActionContext);
 
   if (!ctx) {
     throw new Error(
-      "ActionContext must be initialized before use. Is your useActionContext hook wrapped with an <Action> Component?"
+      "ActionContext must be initialized before use. Is your useActionContext hook wrapped with an <Action> Component?",
     );
   }
 
@@ -91,7 +94,7 @@ export function Action<Data, Error, ValidationError>({
   const [state, action, isPending] = useActionState(
     formAction,
     initial(initialData),
-    permalink
+    permalink,
   );
 
   const metaState =
