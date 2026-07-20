@@ -19,9 +19,8 @@ export function createComponents<
   Data,
   Error,
   ValidationError extends $ZodErrorTree<any>,
-  Payload = FormData,
   Args extends unknown[] = [],
->(action: FormAction<Data, Error, ValidationError, Payload, Args>) {
+>(action: FormAction<Data, Error, ValidationError, FormData, Args>) {
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
     children,
