@@ -316,5 +316,37 @@ describe("formAction", () => {
         items: [{ errors: ["Invalid UUID"] }],
       });
     });
+
+    it("chains .args() to concatenate args schemas", async () => {
+      const action = formAction
+        .args([z.string()])
+        .args([z.number()])
+        .run(async ({ args }) => args);
+
+      const bound = action.bind(null, "hello", 42);
+
+      // @ts-expect-error undefined is ok
+      const { data } = await bound(undefined, undefined);
+
+      expect(data).toEqual(["hello", 42]);
+    });
+
+    it("has validationError for all chained args when they don't match", async () => {
+      const action = formAction
+        .args([z.string().uuid()])
+        .args([z.number().min(10)])
+        .run(async ({ args }) => args);
+
+      const bound = action.bind(null, "not-uuid", 1);
+
+      // @ts-expect-error undefined is ok
+      const result = await bound(undefined, undefined);
+
+      expect(result).toHaveProperty("type", "invalid");
+      expect(result).toHaveProperty("validationError", {
+        errors: [],
+        items: [{ errors: ["Invalid UUID"] }, { errors: ["Too small: expected number to be >=10"] }],
+      });
+    });
   });
 });

@@ -65,7 +65,14 @@ type FormActionBuilder<
 > = {
   args: <T extends [ZodType, ...ZodType[]]>(
     args: T,
-  ) => FormActionBuilder<Schema, TErr, Context, ZodTuple<T, null>>;
+  ) => FormActionBuilder<
+    Schema,
+    TErr,
+    Context,
+    Args extends ZodTuple<infer ExistingItems extends ZodType[], null>
+      ? ZodTuple<[...ExistingItems, ...T], null>
+      : ZodTuple<T, null>
+  >;
   input: <T extends ZodObject>(
     newInput: T extends ZodObject
       ? T
@@ -264,8 +271,13 @@ function formActionBuilder<
         };
 
   return {
-    args<Args extends [ZodType, ...ZodType[]]>(args: Args) {
-      return formActionBuilder(schema, middleware, processError, z.tuple(args));
+    args<T extends [ZodType, ...ZodType[]]>(newArgs: T) {
+      const existingItems = argsSchema ? argsSchema.def.items : [];
+      const combined = [...existingItems, ...newArgs] as unknown as [
+        ZodType,
+        ...ZodType[],
+      ];
+      return formActionBuilder(schema, middleware, processError, z.tuple(combined));
     },
     input<TInput extends ZodObject>(newInput: TInput) {
       if (schema === emptyInput) {
@@ -318,7 +330,7 @@ function formActionBuilder<
       );
     },
     run: schema === emptyInput ? run : runSchema,
-  } as FormActionBuilder<Schema, TErr, Context, Args>;
+  } as unknown as FormActionBuilder<Schema, TErr, Context, Args>;
 }
 
 export const formAction = formActionBuilder(emptyInput);
