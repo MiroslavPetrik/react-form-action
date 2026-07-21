@@ -17,10 +17,11 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 - ✅ Define bindable arguments with the `.args([])` method.
 - ✅ Reuse error handling with the `.error(handler)`.
 
-**React Context access with the `<Action action={myFormAction} />` component**
+**React Context access with the `<Action action={myFormAction} args={[...]} />` component**
 
-- ✅ The `useActionState()` accessible via the `useActionContext()` hook.
+- ✅ The `React.useActionState()` accessible via the `useActionContext()` hook.
 - ✅ Computes progress flags like `isInvalid`, `isSuccess` based on the envelope type.
+- ✅ Binds the action with the arguments from the _args_ prop.
 
 **Context-bound `<Form />` component**
 
@@ -193,16 +194,17 @@ export const signUp = authAction
 The `formAction` builder supports action arguments binding:
 
 ```ts
-// app/[locale]/update-user/[userId]/action.tsx
 import { formAction } from "react-form-action";
 
-export const updateUser = formAction
-  .args([z.string().uuid(), z.enum("fr", "en")])
-  .run(async ({ args: [userId] }) => {
-    return userId;
-    //     ^? string
+const i18nAction = formAction.args([z.enum("fr", "en")]);
+
+export const updateUser = i18nAction
+  .args([z.string().uuid()])
+  .run(async ({ args: [_, userId] }) => {
+    //          ^? ["fr" | "en", string]
+    // ...
   })
-  .error(({ args: [_, locale] }) => {
+  .error(({ args: [locale] }) => {
     return locale === "fr"
       ? "Échec de la mise à jour de l'utilisateur"
       : "Failed to update user";
@@ -210,7 +212,6 @@ export const updateUser = formAction
 ```
 
 ```tsx
-// app/[locale]/update-user/[userId]/page.tsx
 import { Action } from "react-form-action/client";
 import { locale } from "next/root-params";
 
@@ -223,7 +224,7 @@ export default function Page({
   const { userId } = await params;
 
   return (
-    <Action action={updateUser} args={[userId, await locale()]} initialData="">
+    <Action action={updateUser} args={[await locale(), userId]} initialData="">
       <UpdateUserForm />
     </Action>
   );
