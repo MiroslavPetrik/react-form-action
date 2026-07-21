@@ -18,7 +18,7 @@ export type ActionProps<
   ValidationError,
   Arguments extends unknown[] = [],
 > = PropsWithChildren<
-  Arguments extends [unknown]
+  Arguments extends [unknown, ...unknown[]]
     ? {
         action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
         args: Arguments;

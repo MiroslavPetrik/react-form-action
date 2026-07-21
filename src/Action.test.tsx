@@ -47,9 +47,11 @@ describe("Action", () => {
   describe("with formAction having .args()", () => {
     const helloAction = formAction
       .args([z.enum(["sk", "en"])])
-      .run(async ({ args: [locale] }) => {
-        if (locale === "sk") return "Ahoj";
-        else return "Hello" as string;
+      .args([z.boolean()])
+      .run(async ({ args: [locale, strong] }) => {
+        const msg = locale === "sk" ? "Ahoj" : "Hello";
+
+        return strong ? `${msg}!` : msg;
       });
 
     const { Success } = createComponents(helloAction);
@@ -57,7 +59,7 @@ describe("Action", () => {
     test("it binds the args from the props", async () => {
       function HelloForm() {
         return (
-          <Action action={helloAction} args={["sk"]} initialData="">
+          <Action args={["sk", true]} action={helloAction} initialData="">
             <Form>
               <button type="submit" data-testid="submit" />
               <Success>
@@ -76,11 +78,11 @@ describe("Action", () => {
 
       await act(() => userEvent.click(screen.getByTestId("submit")));
 
-      expect(screen.getByTestId("success")).toHaveTextContent("Ahoj");
+      expect(screen.getByTestId("success")).toHaveTextContent("Ahoj!");
     });
 
     test("it works without the args prop", async () => {
-      const manualBind = helloAction.bind(null, "en");
+      const manualBind = helloAction.bind(null, "en", false);
 
       function HelloForm() {
         return (
