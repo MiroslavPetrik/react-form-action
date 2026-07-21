@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import type { $ZodErrorTree, $ZodShape } from "zod/v4/core";
+import type { $ZodErrorTree, $ZodShape, $ZodType } from "zod/v4/core";
 import type { ZodType, ZodObject, ZodTuple } from "zod/v4";
 import {
   createFormAction,
@@ -25,10 +25,10 @@ type MiddlewareFn<
   NewContext extends Record<string, unknown> = Record<string, unknown>,
 > = ({ ctx }: { ctx: Context }) => Promise<NewContext>;
 
-type ErrorHandler<Context, Err, Args extends ZodTuple> = (params: {
+type ErrorHandler<Context, Err, Args> = (params: {
   error: unknown;
   ctx: Context;
-  args: z.infer<Args>;
+  args: Args;
 }) => Promise<Err>;
 
 type InitialContext = Record<"formData", FormData>;
@@ -36,8 +36,8 @@ type InitialContext = Record<"formData", FormData>;
 /**
  * Action without schema has no input.
  */
-type Action<Data, Context, Args extends ZodTuple> = (params: {
-  args: z.infer<Args>;
+type Action<Data, Context, Args extends unknown[]> = (params: {
+  args: Args;
   ctx: Context;
 }) => Promise<Data>;
 
@@ -47,32 +47,26 @@ type Action<Data, Context, Args extends ZodTuple> = (params: {
 type SchemaAction<
   Data,
   Context,
-  Args extends ZodTuple,
+  Args extends unknown[],
   Schema extends ZodType,
 > = (params: {
-  args: z.infer<Args>;
+  args: Args;
   ctx: Context;
-  input: z.infer<Schema>;
+  input: z.output<Schema>;
 }) => Promise<Data>;
 
 // type AnyZodEffects = ZodEffects<any, any, any>;
 
 type FormActionBuilder<
   Schema extends ZodType | EmptyInput,
+  Args extends $ZodType[] = [],
   TErr = unknown,
   Context = InitialContext,
-  Args extends ZodTuple = ZodTuple<[], null>,
+  PlainArgs extends unknown[] = z.output<ZodTuple<Args, null>>,
 > = {
-  args: <T extends [ZodType, ...ZodType[]]>(
+  args: <T extends [$ZodType, ...$ZodType[]]>(
     args: T,
-  ) => FormActionBuilder<
-    Schema,
-    TErr,
-    Context,
-    Args extends ZodTuple<infer ExistingItems extends ZodType[], null>
-      ? ZodTuple<[...ExistingItems, ...T], null>
-      : ZodTuple<T, null>
-  >;
+  ) => FormActionBuilder<Schema, [...Args, ...T], TErr, Context>;
   input: <T extends ZodObject>(
     newInput: T extends ZodObject
       ? T
@@ -93,9 +87,9 @@ type FormActionBuilder<
         ? ZodObject<O1 & O2>
         : never
       : T,
+    Args,
     TErr,
-    Context,
-    Args
+    Context
   >;
   /**
    * A finishing call on the builder completing your action.
@@ -104,38 +98,38 @@ type FormActionBuilder<
    */
   run: Schema extends ZodType
     ? <Data>(
-        action: SchemaAction<Data, Flatten<Context>, Args, Schema>,
+        action: SchemaAction<Data, Flatten<Context>, PlainArgs, Schema>,
       ) => // NOTE: type is inlined, as the FormAction<...> call hinders the union discrimination by the result type
       (
         ...args: [
-          ...z.infer<Args>,
+          ...PlainArgs,
           state: ActionState<
             Data,
             TErr,
-            $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<z.output<Args>>
+            $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<PlainArgs>
           >,
           payload: FormData,
         ]
       ) => Promise<
         Flatten<
           | InvalidState<
-              $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<z.output<Args>>
+              $ZodErrorTree<z.output<Schema>> & $ZodErrorTree<PlainArgs>
             >
           | FailureState<TErr>
           | SuccessState<Data>
         >
       >
     : <Data>(
-        action: Action<Data, Flatten<Context>, Args>,
+        action: Action<Data, Flatten<Context>, PlainArgs>,
       ) => (
         ...args: [
-          ...z.infer<Args>,
-          state: ActionState<Data, TErr, $ZodErrorTree<z.output<Args>>>,
+          ...PlainArgs,
+          state: ActionState<Data, TErr, $ZodErrorTree<PlainArgs>>,
           payload: FormData,
         ]
       ) => Promise<
         Flatten<
-          | InvalidState<$ZodErrorTree<z.output<Args>>>
+          | InvalidState<$ZodErrorTree<PlainArgs>>
           | FailureState<TErr>
           | SuccessState<Data>
         >
@@ -147,7 +141,7 @@ type FormActionBuilder<
    */
   use: <NewContext extends Record<string, unknown>>(
     middleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>,
-  ) => FormActionBuilder<Schema, TErr, Context & NewContext, Args>;
+  ) => FormActionBuilder<Schema, Args, TErr, Context & NewContext>;
   /**
    * A chainable error handler to handle errors thrown while running the action passed to .run().
    * It does not receive errors thrown from the context/middleware.
@@ -155,21 +149,22 @@ type FormActionBuilder<
    * @returns FormActionBuilder
    */
   error: <TErr>(
-    processError: ErrorHandler<Context, TErr, Args>,
-  ) => FormActionBuilder<Schema, TErr, Context, Args>;
+    processError: ErrorHandler<Context, TErr, PlainArgs>,
+  ) => FormActionBuilder<Schema, Args, TErr, Context>;
 };
 
 function formActionBuilder<
   Schema extends ZodType | EmptyInput,
+  Args extends $ZodType[] = [],
   TErr = unknown,
   Context = InitialContext,
-  Args extends ZodTuple = ZodTuple<[], null>,
+  PlainArgs extends unknown[] = z.output<ZodTuple<Args, null>>,
 >(
   schema: Schema,
   middleware: MiddlewareFn<Context>[] = [],
-  processError?: ErrorHandler<Context, TErr, Args>,
-  argsSchema?: ZodTuple,
-): FormActionBuilder<Schema, TErr, Context, Args> {
+  processError?: ErrorHandler<Context, TErr, PlainArgs>,
+  argsSchema?: Args,
+): FormActionBuilder<Schema, Args, TErr, Context> {
   async function createContext(formData: FormData) {
     let ctx = { formData } as Context;
 
@@ -181,19 +176,20 @@ function formActionBuilder<
     return ctx;
   }
 
-  const run = <Data>(action: Action<Data, Context, Args>) =>
+  const run = <Data>(action: Action<Data, Context, PlainArgs>) =>
     createFormAction<
       Data,
       TErr,
       $ZodErrorTree<z.output<Args>>,
       FormData,
-      z.infer<Args>
+      PlainArgs
     >(({ success, failure, invalid }, ...args) => {
       return async (state, formData) => {
         const ctx = await createContext(formData);
 
         if (argsSchema) {
-          const result = argsSchema.safeParse(args);
+          // @ts-expect-error args have 1 or more elements here
+          const result = z.tuple(argsSchema).safeParse(args);
 
           if (!result.success) {
             return invalid(
@@ -220,13 +216,13 @@ function formActionBuilder<
   const runSchema =
     schema === emptyInput
       ? undefined
-      : <Data>(action: SchemaAction<Data, Context, Args, RealSchema>) => {
+      : <Data>(action: SchemaAction<Data, Context, PlainArgs, RealSchema>) => {
           return createFormAction<
             Data,
             TErr,
-            $ZodErrorTree<z.output<RealSchema>> | $ZodErrorTree<z.output<Args>>,
+            $ZodErrorTree<z.output<RealSchema>> | $ZodErrorTree<PlainArgs>,
             FormData,
-            z.infer<Args>
+            PlainArgs
           >(({ success, failure, invalid }, ...args) => {
             const formDataSchema = zfd.formData(schema);
 
@@ -234,13 +230,12 @@ function formActionBuilder<
               const ctx = await createContext(formData);
 
               if (argsSchema) {
-                const result = argsSchema.safeParse(args);
+                // @ts-expect-error args have 1 or more elements here
+                const result = z.tuple(argsSchema).safeParse(args);
 
                 if (!result.success) {
                   return invalid(
-                    z.treeifyError(result.error) as $ZodErrorTree<
-                      z.output<Args>
-                    >,
+                    z.treeifyError(result.error) as $ZodErrorTree<PlainArgs>,
                   );
                 }
               }
@@ -271,17 +266,14 @@ function formActionBuilder<
         };
 
   return {
-    args<T extends [ZodType, ...ZodType[]]>(newArgs: T) {
-      const existingItems = argsSchema ? argsSchema.def.items : [];
-      const combined = [...existingItems, ...newArgs] as unknown as [
-        ZodType,
-        ...ZodType[],
-      ];
-      return formActionBuilder(schema, middleware, processError, z.tuple(combined));
+    args<T extends [$ZodType, ...$ZodType[]]>(newArgs: T) {
+      const args = argsSchema ? [...argsSchema, ...newArgs] : newArgs;
+
+      return formActionBuilder(schema, middleware, processError, args);
     },
     input<TInput extends ZodObject>(newInput: TInput) {
       if (schema === emptyInput) {
-        return formActionBuilder<TInput, TErr, Context, Args>(
+        return formActionBuilder(
           newInput,
           middleware,
           processError,
@@ -301,7 +293,7 @@ function formActionBuilder<
           ...newInput.shape,
         });
 
-        return formActionBuilder<typeof merged, TErr, Context, Args>(
+        return formActionBuilder<typeof merged, Args, TErr, Context>(
           merged,
           middleware,
         );
@@ -314,23 +306,18 @@ function formActionBuilder<
     use<NewContext extends Record<string, unknown>>(
       newMiddleware: ({ ctx }: { ctx: Context }) => Promise<NewContext>,
     ) {
-      return formActionBuilder<Schema, TErr, Context & NewContext, Args>(
+      return formActionBuilder(
         schema,
         [...middleware, newMiddleware],
         processError,
         argsSchema,
       );
     },
-    error<TErr>(processError: ErrorHandler<Context, TErr, Args>) {
-      return formActionBuilder<Schema, TErr, Context, Args>(
-        schema,
-        middleware,
-        processError,
-        argsSchema,
-      );
+    error<TErr>(processError: ErrorHandler<Context, TErr, PlainArgs>) {
+      return formActionBuilder(schema, middleware, processError, argsSchema);
     },
     run: schema === emptyInput ? run : runSchema,
-  } as unknown as FormActionBuilder<Schema, TErr, Context, Args>;
+  } as unknown as FormActionBuilder<Schema, Args, TErr, Context>;
 }
 
 export const formAction = formActionBuilder(emptyInput);

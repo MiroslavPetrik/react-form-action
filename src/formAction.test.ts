@@ -85,20 +85,22 @@ describe("formAction", () => {
     it("receives args", async () => {
       const i18nAction = formAction
         .args([z.string()])
-        .error(async ({ args: [lang] }) => {
-          return lang === "fr" ? "erreur" : "error";
+        .args([z.number()])
+        .error(async ({ args: [lang, num] }) => {
+          const message = lang === "fr" ? "erreur" : "error";
+          return `${message} ${num}`;
         })
         .run(async () => {
           throw new Error();
         });
 
-      const frAction = i18nAction.bind(null, "fr");
+      const frAction = i18nAction.bind(null, "fr", 3);
 
       // @ts-expect-error undefined is ok, we don't use initial state
       const result = await frAction(undefined, new FormData());
 
       expect(result).toHaveProperty("type", "failure");
-      expect(result).toHaveProperty("error", "erreur");
+      expect(result).toHaveProperty("error", "erreur 3");
     });
   });
 
@@ -345,7 +347,10 @@ describe("formAction", () => {
       expect(result).toHaveProperty("type", "invalid");
       expect(result).toHaveProperty("validationError", {
         errors: [],
-        items: [{ errors: ["Invalid UUID"] }, { errors: ["Too small: expected number to be >=10"] }],
+        items: [
+          { errors: ["Invalid UUID"] },
+          { errors: ["Too small: expected number to be >=10"] },
+        ],
       });
     });
   });
