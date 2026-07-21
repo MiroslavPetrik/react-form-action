@@ -184,3 +184,30 @@ describe("formAction.args", () => {
     }
   });
 });
+
+describe("formAction.args chaining", () => {
+  test("chaining .args() concatenates the tuple types", () => {
+    const a = formAction.args([z.number()]);
+    const b = a.args([z.string()]);
+
+    expectTypeOf<typeof b.run>().parameter(0).toMatchTypeOf<
+      (params: {
+        args: [number, string];
+        ctx: { formData: FormData };
+      }) => Promise<unknown>
+    >();
+  });
+
+  test("chained .args() enforces correct types on bind", () => {
+    const action = formAction
+      .args([z.number()])
+      .args([z.string()])
+      .run(async ({ args }) => args);
+
+    // @ts-expect-error wrong types: string first, then number
+    action.bind(null, "not-a-number", 42);
+
+    // correct usage compiles fine
+    expectTypeOf<typeof action.bind>().toBeCallableWith(null, 1, "hello");
+  });
+});
