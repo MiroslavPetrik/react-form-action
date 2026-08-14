@@ -293,10 +293,7 @@ function formActionBuilder<
           ...newInput.shape,
         });
 
-        return formActionBuilder<typeof merged, Args, TErr, Context>(
-          merged,
-          middleware,
-        );
+        return formActionBuilder(merged, middleware, processError, argsSchema);
       } else {
         throw Error(
           "Merging inputs works only for object schemas without effects.",
