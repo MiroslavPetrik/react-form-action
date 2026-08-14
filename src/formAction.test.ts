@@ -102,6 +102,28 @@ describe("formAction", () => {
       expect(result).toHaveProperty("type", "failure");
       expect(result).toHaveProperty("error", "erreur 3");
     });
+
+    it("stays with consequent input calls (#18)", async () => {
+      const action = formAction
+        .error(async () => {
+          return "error handler";
+        })
+        .input(z.object({ password: z.string() }))
+        .input(z.object({ confirmPassword: z.string() }))
+        .run(async () => {
+          throw new Error();
+        });
+
+      const formData = new FormData();
+      formData.set("password", "on");
+      formData.set("confirmPassword", "on");
+
+      // @ts-expect-error undefined is ok, we don't use initial state
+      const result = await action(undefined, formData);
+
+      expect(result).toHaveProperty("type", "failure");
+      expect(result).toHaveProperty("error", "error handler");
+    });
   });
 
   describe("context", () => {
@@ -350,6 +372,33 @@ describe("formAction", () => {
         items: [
           { errors: ["Invalid UUID"] },
           { errors: ["Too small: expected number to be >=10"] },
+        ],
+      });
+    });
+
+    it("stays with consequent input calls (#18)", async () => {
+      const action = formAction
+        .args([z.string()])
+        .input(z.object({ password: z.string() }))
+        .input(z.object({ confirmPassword: z.string() }))
+        .run(async ({ args: [num] }) => {
+          return num;
+        });
+
+      // @ts-expect-error breaking validation
+      const bound = action.bind(null, 42);
+
+      const formData = new FormData();
+      formData.set("password", "on");
+      formData.set("confirmPassword", "on");
+      // @ts-expect-error undefined is ok
+      const result = await bound(undefined, formData);
+
+      expect(result).toHaveProperty("type", "invalid");
+      expect(result).toHaveProperty("validationError", {
+        errors: [],
+        items: [
+          { errors: ["Invalid input: expected string, received number"] },
         ],
       });
     });
