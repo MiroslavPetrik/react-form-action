@@ -1,13 +1,11 @@
-import React from "react";
-import { describe, test, expect } from "vitest";
-import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
 import { z } from "zod/v4";
-
-import { createComponents } from "./createComponents";
-import { formAction } from "./formAction";
 import { Action } from "./Action";
+import { createComponents } from "./createComponents";
 import { Form } from "./Form";
+import { formAction } from "./formAction";
 
 describe("FieldError", () => {
   const action = formAction
@@ -24,7 +22,7 @@ describe("FieldError", () => {
         return (
           <Action action={action} initialData="">
             <Form>
-              <input name="email" data-testid="email" />
+              <input name="email" />
               <div data-testid="wrapper">
                 <FieldError name="email" />
               </div>
@@ -51,11 +49,13 @@ describe("FieldError", () => {
         return (
           <Action action={action} initialData="">
             <Form>
-              <input name="email" data-testid="email" />
+              <input name="email" id="email" />
               <button type="submit" data-testid="submit" />
               <FieldError name="email">
                 {({ name, error }) => (
-                  <label className={error ? "error" : "info"}>{name}</label>
+                  <label htmlFor="email" className={error ? "error" : "info"}>
+                    {name}
+                  </label>
                 )}
               </FieldError>
             </Form>

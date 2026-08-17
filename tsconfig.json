@@ -9,7 +9,7 @@
     "noUncheckedIndexedAccess": true,
     "lib": ["dom", "ES2022"],
     "moduleResolution": "Bundler",
-    "jsx": "react"
+    "jsx": "react-jsx"
   },
   "include": ["src", "./setup.ts"],
   "exclude": ["node_modules"]

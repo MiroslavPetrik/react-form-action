@@ -1,9 +1,8 @@
-import { it, describe, vi, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod/v4";
 import { zfd } from "zod-form-data";
-
-import { formAction } from "./formAction";
 import { initial } from "./createFormAction";
+import { formAction } from "./formAction";
 
 describe("formAction", () => {
   it("works", async () => {
@@ -207,7 +206,7 @@ describe("formAction", () => {
           properties: {
             allright: {
               errors: [
-                'Invalid input: expected \"on\"',
+                'Invalid input: expected "on"',
                 "Invalid input: expected undefined",
                 "Invalid input: expected boolean, received string",
               ],

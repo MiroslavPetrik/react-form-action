@@ -1,13 +1,11 @@
-import React from "react";
-import { describe, test, expect } from "vitest";
-import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
 import { z } from "zod/v4";
-
-import { createComponents } from "./createComponents";
-import { formAction } from "./formAction";
 import { Action } from "./Action";
+import { createComponents } from "./createComponents";
 import { Form } from "./Form";
+import { formAction } from "./formAction";
 
 describe("Success", () => {
   // TODO: drop input https://github.com/MiroslavPetrik/react-form-action/issues/12
@@ -55,7 +53,7 @@ describe("Success", () => {
               <button type="submit" data-testid="submit" />
               <Success>
                 {({ isSuccess, data }) => (
-                  <label className={isSuccess ? data : "info"}>Color</label>
+                  <p className={isSuccess ? data : "info"}>Color</p>
                 )}
               </Success>
             </Form>

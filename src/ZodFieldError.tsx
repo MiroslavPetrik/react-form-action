@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import type { $ZodErrorTree } from "zod/v4/core";
 
 const SEPARATOR = "." as const;
@@ -60,9 +60,7 @@ export function ZodFieldError<
   const path = name.split(SEPARATOR);
 
   let error = errors;
-  while (path.length) {
-    const key = path.shift()!;
-
+  for (const key of path) {
     if (!error.properties) {
       // @ts-expect-error non-existent property
       error = noError;
@@ -70,7 +68,7 @@ export function ZodFieldError<
     }
 
     // @ts-expect-error accessing properties dynamically
-    error = error["properties"][key] ?? noError;
+    error = error.properties[key] ?? noError;
   }
 
   return children({

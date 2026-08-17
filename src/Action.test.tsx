@@ -1,16 +1,12 @@
-import React from "react";
-import { describe, test, expect, vi } from "vitest";
-import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-
-import { Action } from "./Action";
-import { formAction } from "./formAction";
-import { Form } from "./Form";
-
-import { createComponents } from "./createComponents";
-
 import { zfd } from "zod-form-data";
+import { Action } from "./Action";
+import { createComponents } from "./createComponents";
+import { Form } from "./Form";
+import { formAction } from "./formAction";
 
 describe("Action", () => {
   test("it enables form to consume action via context", async () => {

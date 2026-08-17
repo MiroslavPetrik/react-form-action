@@ -1,14 +1,18 @@
 "use client";
 
-import React, { type PropsWithChildren } from "react";
-import { useActionState, createContext, use } from "react";
+import {
+  createContext,
+  type PropsWithChildren,
+  use,
+  useActionState,
+} from "react";
 import type {
   ActionState,
+  FailureState,
+  FormAction,
   InitialState,
   InvalidState,
   SuccessState,
-  FailureState,
-  FormAction,
 } from "./createFormAction";
 import { createFormAction, initial } from "./createFormAction";
 
@@ -88,7 +92,7 @@ export function useActionContext<
   Error,
   ValidationError,
   Args extends unknown[] = [],
->(action?: FormAction<Data, Error, ValidationError, FormData, Args>) {
+>(_action?: FormAction<Data, Error, ValidationError, FormData, Args>) {
   const ctx = use(ActionContext);
 
   if (!ctx) {
@@ -121,6 +125,7 @@ export function Action<
   ) as NoArgsAction;
 
   const [state, action, isPending] = useActionState(
+    // biome-ignore lint/suspicious/noExplicitAny: fine
     async (state: any, payload: FormData) => {
       if (validate) {
         const clientValidateAction = createFormAction(

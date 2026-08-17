@@ -1,7 +1,7 @@
 "use client";
 
-import React, { startTransition } from "react";
-import type { JSX, FormEvent } from "react";
+import type { FormEvent, JSX } from "react";
+import { startTransition } from "react";
 
 import { useActionContext } from "./Action";
 

@@ -1,12 +1,11 @@
-import React from "react";
-import { describe, test, expect } from "vitest";
-import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
 
 import { Action } from "./Action";
+import { Form } from "./Form";
 import { formAction } from "./formAction";
 import { Pending } from "./Pending";
-import { Form } from "./Form";
 
 describe("Pending", () => {
   const neverResolve = formAction.run(async () => {

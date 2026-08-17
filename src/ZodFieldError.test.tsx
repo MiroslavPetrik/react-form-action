@@ -1,6 +1,5 @@
-import React from "react";
-import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, test } from "vitest";
 
 import { z } from "zod/v4";
 
@@ -25,7 +24,7 @@ describe("ZodFieldError", () => {
     render(
       !result.success && (
         <ZodFieldError name="" errors={z.treeifyError(result.error)} />
-      )
+      ),
     );
 
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
@@ -44,11 +43,11 @@ describe("ZodFieldError", () => {
     render(
       !result.success && (
         <ZodFieldError errors={z.treeifyError(result.error)} name="password" />
-      )
+      ),
     );
 
     expect(
-      screen.getByText("Too small: expected string to have >=6 characters")
+      screen.getByText("Too small: expected string to have >=6 characters"),
     ).toBeInTheDocument();
   });
 
@@ -71,11 +70,11 @@ describe("ZodFieldError", () => {
     render(
       !result.success && (
         <ZodFieldError errors={z.treeifyError(result.error)} name="exp.year" />
-      )
+      ),
     );
 
     expect(
-      screen.getByText("Invalid input: expected number, received undefined")
+      screen.getByText("Invalid input: expected number, received undefined"),
     ).toBeInTheDocument();
   });
 
@@ -89,7 +88,7 @@ describe("ZodFieldError", () => {
         <ZodFieldError errors={z.treeifyError(result.error)} name="invalid">
           {({ errors }) => (errors.length ? "fail" : "success")}
         </ZodFieldError>
-      )
+      ),
     );
 
     expect(screen.getByText("success")).toBeInTheDocument();

@@ -1,14 +1,14 @@
+import type { ZodObject, ZodTuple, ZodType } from "zod/v4";
 import { z } from "zod/v4";
 import type { $ZodErrorTree, $ZodShape, $ZodType } from "zod/v4/core";
-import type { ZodType, ZodObject, ZodTuple } from "zod/v4";
-import {
-  createFormAction,
-  FailureState,
-  InvalidState,
-  SuccessState,
-  ActionState,
-} from "./createFormAction";
 import { zfd } from "zod-form-data";
+import {
+  type ActionState,
+  createFormAction,
+  type FailureState,
+  type InvalidState,
+  type SuccessState,
+} from "./createFormAction";
 
 const emptyInput = Symbol();
 
@@ -184,7 +184,7 @@ function formActionBuilder<
       FormData,
       PlainArgs
     >(({ success, failure, invalid }, ...args) => {
-      return async (state, formData) => {
+      return async (_state, formData) => {
         const ctx = await createContext(formData);
 
         if (argsSchema) {
@@ -226,7 +226,7 @@ function formActionBuilder<
           >(({ success, failure, invalid }, ...args) => {
             const formDataSchema = zfd.formData(schema);
 
-            return async (state, formData) => {
+            return async (_state, formData) => {
               const ctx = await createContext(formData);
 
               if (argsSchema) {

@@ -1,6 +1,6 @@
-import { expectTypeOf, describe, test } from "vitest";
+import { describe, expectTypeOf, test } from "vitest";
 import { z } from "zod/v4";
-import { $ZodErrorTree } from "zod/v4/core";
+import type { $ZodErrorTree } from "zod/v4/core";
 
 import { formAction } from "./formAction";
 
@@ -8,13 +8,13 @@ describe("formAction.input", () => {
   describe("valid calls", () => {
     test("works with z.object()", () => {
       expectTypeOf<typeof formAction.input>().toBeCallableWith(
-        z.object({ name: z.string() })
+        z.object({ name: z.string() }),
       );
     });
 
     test("it supports refinement", () => {
       expectTypeOf<typeof formAction.input>().toBeCallableWith(
-        z.object({ name: z.string() }).refine((val) => val)
+        z.object({ name: z.string() }).refine((val) => val),
       );
     });
   });
@@ -36,13 +36,13 @@ describe("formAction.input", () => {
 
       // @ts-expect-error
       expectTypeOf<typeof basic>().not.toBeCallableWith(
-        z.object({ surname: z.string() }).refine((val) => val)
+        z.object({ surname: z.string() }).refine((val) => val),
       );
     });
 
     test("Extending schema with effect is not possible", () => {
       const withEffect = formAction.input(
-        z.object({ name: z.string() }).refine((val) => val)
+        z.object({ name: z.string() }).refine((val) => val),
       );
 
       // Extending schema with effect is not possible.
@@ -50,7 +50,7 @@ describe("formAction.input", () => {
 
       // @ts-expect-error
       expectTypeOf<typeof withEffect>().not.toBeCallableWith(
-        z.object({ name: z.string() })
+        z.object({ name: z.string() }),
       );
     });
   });
@@ -190,12 +190,14 @@ describe("formAction.args chaining", () => {
     const a = formAction.args([z.number()]);
     const b = a.args([z.string()]);
 
-    expectTypeOf<typeof b.run>().parameter(0).toMatchTypeOf<
-      (params: {
-        args: [number, string];
-        ctx: { formData: FormData };
-      }) => Promise<unknown>
-    >();
+    expectTypeOf<typeof b.run>()
+      .parameter(0)
+      .toMatchTypeOf<
+        (params: {
+          args: [number, string];
+          ctx: { formData: FormData };
+        }) => Promise<unknown>
+      >();
   });
 
   test("chained .args() enforces correct types on bind", () => {

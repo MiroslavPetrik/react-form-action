@@ -1,12 +1,11 @@
-import React, { useRef } from "react";
-
-import { describe, test, expect, vi } from "vitest";
-import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
-import { Form } from "./Form";
+import { userEvent } from "@testing-library/user-event";
+import { useRef } from "react";
+import { describe, expect, test, vi } from "vitest";
+import { formAction } from ".";
 
 import { Action } from "./Action";
-import { formAction } from ".";
+import { Form } from "./Form";
 
 describe("Form", () => {
   test("it accepts ref", async () => {
@@ -29,7 +28,7 @@ describe("Form", () => {
       );
     }
 
-    const spy = vi.fn((expected: boolean) => {});
+    const spy = vi.fn(() => {});
 
     render(<Demo onSubmit={spy} />);
 

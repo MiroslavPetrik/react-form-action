@@ -62,11 +62,11 @@ export function createFormAction<
       success: (data: Data) => SuccessState<Data>;
       failure: (error: Error) => FailureState<Error>;
       invalid: (
-        validationError: ValidationError
+        validationError: ValidationError,
       ) => InvalidState<ValidationError>;
     },
     ...args: Arguments
-  ) => FormAction<Data, Error, ValidationError, Payload>
+  ) => FormAction<Data, Error, ValidationError, Payload>,
 ) {
   function success(data: Data): SuccessState<Data> {
     return { type: "success", data, error: null, validationError: null };
@@ -75,7 +75,7 @@ export function createFormAction<
     return { type: "failure", data: null, error, validationError: null };
   }
   function invalid(
-    validationError: ValidationError
+    validationError: ValidationError,
   ): InvalidState<ValidationError> {
     return { type: "invalid", data: null, error: null, validationError };
   }
@@ -93,7 +93,7 @@ export function createFormAction<
 
     return formAction({ success, failure, invalid }, ...boundArgs)(
       state,
-      payload
+      payload,
     );
   };
 }
