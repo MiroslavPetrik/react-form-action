@@ -1,8 +1,8 @@
 import React from "react";
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import { userEvent } from "@testing-library/user-event";
 import { act, render, screen } from "@testing-library/react";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { Action } from "./Action";
 import { formAction } from "./formAction";
@@ -10,17 +10,21 @@ import { Form } from "./Form";
 
 import { createComponents } from "./createComponents";
 
+import { zfd } from "zod-form-data";
+
 describe("Action", () => {
   test("it enables form to consume action via context", async () => {
-    const subscribeAction = formAction
-      .input(
-        z.object({
-          email: z.email(),
+    const subscribeAction = vi.fn(
+      formAction
+        .input(
+          z.object({
+            email: z.email(),
+          }),
+        )
+        .run(async () => {
+          return null;
         }),
-      )
-      .run(async () => {
-        return null;
-      });
+    );
 
     const { FieldError } = createComponents(subscribeAction);
 
@@ -41,6 +45,7 @@ describe("Action", () => {
     await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
     await act(() => userEvent.click(screen.getByTestId("submit")));
 
+    expect(subscribeAction).toHaveBeenCalled();
     expect(screen.getByText("Invalid email address")).toBeInTheDocument();
   });
 
@@ -106,6 +111,66 @@ describe("Action", () => {
       await act(() => userEvent.click(screen.getByTestId("submit")));
 
       expect(screen.getByTestId("success")).toHaveTextContent("Hello");
+    });
+  });
+
+  describe("validate prop", () => {
+    test("it runs the client validation before the action", async () => {
+      const subscribeAction = vi.fn(
+        formAction
+          .input(
+            z.object({
+              email: z.email(),
+            }),
+          )
+          .run(async () => {
+            return null;
+          }),
+      );
+
+      const { FieldError } = createComponents(subscribeAction);
+
+      function clientValidate(payload: FormData) {
+        z.config(z.locales.cs());
+
+        const schema = z.object({
+          email: z.email(),
+        });
+
+        const result = zfd.formData(schema).safeParse(payload);
+
+        if (result.error) {
+          return z.treeifyError(result.error);
+        }
+
+        return null;
+      }
+
+      function SubscribeForm() {
+        return (
+          <Action
+            action={subscribeAction}
+            initialData={null}
+            validate={clientValidate}
+          >
+            <Form>
+              <input type="text" name="email" data-testid="email" />
+              <FieldError name="email" />
+              <button type="submit" data-testid="submit" />
+            </Form>
+          </Action>
+        );
+      }
+
+      render(<SubscribeForm />);
+
+      await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
+      await act(() => userEvent.click(screen.getByTestId("submit")));
+
+      expect(
+        screen.getByText("Neplatný formát e-mailová adresa"),
+      ).toBeInTheDocument();
+      expect(subscribeAction).not.toHaveBeenCalled();
     });
   });
 });

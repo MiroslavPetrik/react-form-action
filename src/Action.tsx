@@ -10,7 +10,7 @@ import type {
   FailureState,
   FormAction,
 } from "./createFormAction";
-import { initial } from "./createFormAction";
+import { createFormAction, initial } from "./createFormAction";
 
 export type ActionProps<
   Data,
@@ -24,12 +24,14 @@ export type ActionProps<
         args: Arguments;
         initialData: Data;
         permalink?: string;
+        validate?: (payload: FormData) => null | ValidationError;
       }
     : {
         action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
         initialData: Data;
         args?: undefined;
         permalink?: string;
+        validate?: (payload: FormData) => null | ValidationError;
       }
 >;
 
@@ -110,6 +112,7 @@ export function Action<
   initialData,
   args,
   permalink,
+  validate,
 }: ActionProps<Data, Error, ValidationError, Args>) {
   type NoArgsAction = FormAction<Data, Error, ValidationError, FormData, []>;
 
@@ -118,7 +121,34 @@ export function Action<
   ) as NoArgsAction;
 
   const [state, action, isPending] = useActionState(
-    argAction,
+    async (state: any, payload: FormData) => {
+      if (validate) {
+        const clientValidateAction = createFormAction(
+          ({ invalid, success }) => {
+            return async (_, payload) => {
+              const errors = validate(payload);
+
+              if (errors) {
+                return invalid(errors);
+              }
+
+              return success(true);
+            };
+          },
+        );
+
+        const clientValidationResult = await clientValidateAction(
+          state,
+          payload,
+        );
+
+        if (clientValidationResult.type === "invalid") {
+          return clientValidationResult;
+        }
+      }
+
+      return argAction(state, payload);
+    },
     initial(initialData),
     permalink,
   );

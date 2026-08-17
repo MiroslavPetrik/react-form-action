@@ -22,6 +22,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 - ✅ The `React.useActionState()` accessible via the `useActionContext()` hook.
 - ✅ Computes progress flags like `isInvalid`, `isSuccess` based on the envelope type.
 - ✅ Binds the action with the arguments from the _args_ prop.
+- ✅ Has an optional `validate` prop to validate the form data client-side before calling the server action.
 
 **Context-bound `<Form />` component**
 
