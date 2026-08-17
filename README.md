@@ -102,7 +102,6 @@ export function SubscribeForm() {
 
 ```tsx
 // app/subscribe/page.tsx
-
 import { Action } from "react-form-action/client";
 
 import { subscribeAction } from "./action";
@@ -232,112 +231,6 @@ export default function Page({
 }
 ```
 
-### Action Creator
-
-Low-level action creator, which provides the `success`, `failure` and `invalid` envelope constructors. With the `createFormAction` you must handle the native `FormData` by yourself.
-
-```ts
-"use server";
-
-import { createFormAction } from "react-form-action";
-import { z } from "zod";
-
-// Define custom serializable error & success data types
-type ErrorData = {
-  message: string;
-};
-
-type SuccessData = {
-  message: string;
-};
-
-type ValiationError = {
-  name?: string;
-};
-
-const updateUserSchema = z.object({ name: z.string() });
-
-export const updateUser = createFormAction<
-  SuccessData,
-  ErrorData,
-  ValiationError
->(({ success, failure, invalid }) =>
-  // success and failure helper functions create wrappers for success & error data respectively
-  async (prevState, formData) => {
-    if (prevState.type === "initial") {
-      // use the initialData passed to <Form /> here
-      // prevState.data === "foobar"
-    }
-
-    try {
-      const { name } = updateUserSchema.parse({
-        name: formData.get("name"),
-      });
-
-      const user = await updateCurrentUser(name);
-
-      if (user) {
-        // {type: "success", data: "Your profile has been updated.", error: null, validationError: null}
-        return success({
-          message: "Your profile has been updated.",
-        });
-      } else {
-        // {type: "error", data: null, error: { message: "No current user." }, validationError: null}
-        return failure({ message: "No current user." });
-      }
-    } catch (error) {
-      if (error instanceof ZodError) {
-        // {type: "invalid", data: null, error: null, validationError: {name: "Invalid input"}}
-        return invalid({
-          name: error.issues[0]?.message ?? "Validation error",
-        });
-      }
-
-      return failure({ message: "Failed to update user." });
-    }
-  },
-);
-```
-
-The action creator supports arguments binding:
-
-```ts
-export const updateUser = createFormAction(
-  (
-    { success, failure, invalid },
-    userId: string /* Here you can specify multiple arguments */,
-  ) =>
-    async (prevState, formData) => {
-      try {
-        const { name } = updateUserSchema.parse({
-          name: formData.get("name"),
-        });
-
-        const user = await db.users.findById(userId);
-
-        if (!user) {
-          return failure({ message: "No such user." });
-        }
-
-        const updated = await user.update({ name });
-
-        if (updated) {
-          return success({
-            message: "User has been updated.",
-          });
-        } else {
-          return failure({ message: "Failed to update." });
-        }
-      } catch (error) {
-        // handle error
-      }
-    },
-);
-
-// call bind as usuall, the "123" becomes the "userId"
-updateUser.bind(null, "123");
-```
-
 ### Action Context
 
 The `<Action>` components enables you to access your `action`'s state with the `useActionContext()` hook:
@@ -384,6 +277,63 @@ export function SignupForm() {
   );
 }
 ```
+
+#### Client-side validation
+
+The `<Action validate={} />` prop enables you to tap into the `formData` before they are passed to the server action.
+
+```tsx
+"use client"; // NOTE: The <Action> renders a context provider (a client component)
+
+import type { PropsWithChildren } from "react";
+import { Action } from "react-form-action/client";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { signUp } from "./action";
+import { signUpSchema } from "./schema";
+
+export function SignUpAction({ children }: PropsWithChildren) {
+  return (
+    <Action
+      action={signUp}
+      initialData={undefined}
+      validate={(formData) => {
+        const result = zfd.formData(signUpSchema).safeParse(formData);
+
+        // NOTE: the return must be of the same type as your action's ValidationError type
+        if (result.error) {
+          return z.treeifyError(result.error);
+        }
+
+        return null;
+      }}
+    >
+      {children}
+    </Action>
+  );
+}
+```
+
+Use the `validateSchema` to avoid the zod-form-data boilerplate:
+
+```tsx
+import { validateSchema } from "react-form-action";
+
+import { signUpSchema } from "./schema";
+
+export function SignUpAction({ children }: PropsWithChildren) {
+  return (
+    <Action
+      action={signUp}
+      initialData={undefined}
+      validate={validateSchema(signUpSchema)}
+    >
+      {children}
+    </Action>
+  );
+}
+```
+
 
 ### `<Form>` Component
 
@@ -544,4 +494,112 @@ function SubmitButton() {
     </Pending>
   );
 };
+```
+
+
+
+### Action Creator
+
+Low-level action creator, which provides the `success`, `failure` and `invalid` envelope constructors. With the `createFormAction` you must handle the native `FormData` by yourself.
+
+```ts
+"use server";
+
+import { createFormAction } from "react-form-action";
+import { z } from "zod";
+
+// Define custom serializable error & success data types
+type ErrorData = {
+  message: string;
+};
+
+type SuccessData = {
+  message: string;
+};
+
+type ValiationError = {
+  name?: string;
+};
+
+const updateUserSchema = z.object({ name: z.string() });
+
+export const updateUser = createFormAction<
+  SuccessData,
+  ErrorData,
+  ValiationError
+>(({ success, failure, invalid }) =>
+  // success and failure helper functions create wrappers for success & error data respectively
+  async (prevState, formData) => {
+    if (prevState.type === "initial") {
+      // use the initialData passed to <Form /> here
+      // prevState.data === "foobar"
+    }
+
+    try {
+      const { name } = updateUserSchema.parse({
+        name: formData.get("name"),
+      });
+
+      const user = await updateCurrentUser(name);
+
+      if (user) {
+        // {type: "success", data: "Your profile has been updated.", error: null, validationError: null}
+        return success({
+          message: "Your profile has been updated.",
+        });
+      } else {
+        // {type: "error", data: null, error: { message: "No current user." }, validationError: null}
+        return failure({ message: "No current user." });
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // {type: "invalid", data: null, error: null, validationError: {name: "Invalid input"}}
+        return invalid({
+          name: error.issues[0]?.message ?? "Validation error",
+        });
+      }
+
+      return failure({ message: "Failed to update user." });
+    }
+  },
+);
+```
+
+The action creator supports arguments binding:
+
+```ts
+export const updateUser = createFormAction(
+  (
+    { success, failure, invalid },
+    userId: string /* Here you can specify multiple arguments */,
+  ) =>
+    async (prevState, formData) => {
+      try {
+        const { name } = updateUserSchema.parse({
+          name: formData.get("name"),
+        });
+
+        const user = await db.users.findById(userId);
+
+        if (!user) {
+          return failure({ message: "No such user." });
+        }
+
+        const updated = await user.update({ name });
+
+        if (updated) {
+          return success({
+            message: "User has been updated.",
+          });
+        } else {
+          return failure({ message: "Failed to update." });
+        }
+      } catch (error) {
+        // handle error
+      }
+    },
+);
+
+// call bind as usuall, the "123" becomes the "userId"
+updateUser.bind(null, "123");
 ```
