@@ -14,7 +14,12 @@ import {
   type ZodFieldErrorChildrenProps,
 } from "./ZodFieldError";
 
-type Reducers<State = unknown> = Record<string, (state: State) => unknown>;
+type ErrorProps = ZodFieldErrorChildrenProps<string>;
+
+type Reducers<State = unknown> = Record<
+  string,
+  (state: State, errorProps: ErrorProps) => unknown
+>;
 
 // biome-ignore lint/suspicious/noExplicitAny: ok
 type InferFieldProps<T extends Reducers<any>> = {
@@ -56,20 +61,22 @@ export function createComponents<
     const defaultChildren = ({ error }: ZodFieldErrorChildrenProps<Name>) =>
       isInvalid && <>{error}</>;
 
-    const fieldProps = Object.fromEntries(
-      Object.entries(options.fieldProps ?? {}).map(([prop, reducer]) => [
-        prop,
-        reducer(state),
-      ]),
-    );
-
     const render = children ?? defaultChildren;
 
     return (
       // @ts-expect-error fine
       <ZodFieldError errors={validationError ?? noError} name={name}>
-        {/** @ts-expect-error empty name ("") is fine */}
-        {(errorProps) => render({ ...errorProps, ...fieldProps })}
+        {(errorProps) => {
+          const fieldProps = Object.fromEntries(
+            Object.entries(options.fieldProps ?? {}).map(([prop, reducer]) => [
+              prop,
+              reducer(state, errorProps),
+            ]),
+          );
+
+          // @ts-expect-error empty name ("") is fine
+          return render({ ...errorProps, ...fieldProps });
+        }}
       </ZodFieldError>
     );
   }

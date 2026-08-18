@@ -76,31 +76,45 @@ describe("FieldError", () => {
 
   describe("with prop reducers", () => {
     test("the render prop receives the props from the reducers", async () => {
-      const action = formAction
-        .input(z.object({ email: z.email() }))
+      const signin = formAction
+        .input(
+          z.object({
+            email: z.email(),
+            password: z.string().min(6),
+          }),
+        )
         .run(async () => {
           return "success";
         });
 
-      const { FieldError } = createComponents(action, {
+      const { FieldError } = createComponents(signin, {
         fieldProps: {
-          color: (state) => (state.isInvalid ? "red" : "info"),
+          color: ({ isInvalid }, { error }) =>
+            isInvalid && error ? "red" : "info",
         },
       });
 
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={signin} initialData="">
             <Form>
-              <input name="email" id="email" />
-              <button type="submit" data-testid="submit" />
               <FieldError name="email">
                 {({ name, color }) => (
-                  <label htmlFor="email" className={color}>
+                  <label htmlFor={name} className={color}>
                     {name}
+                    <input name={name} id={name} />
                   </label>
                 )}
               </FieldError>
+              <FieldError name="password">
+                {({ name, color }) => (
+                  <label htmlFor={name} className={color}>
+                    {name}
+                    <input name={name} id={name} />
+                  </label>
+                )}
+              </FieldError>
+              <button type="submit" data-testid="submit" />
             </Form>
           </Action>
         );
@@ -108,12 +122,19 @@ describe("FieldError", () => {
 
       render(<Test />);
 
-      const label = screen.getByText("email");
-      expect(label).toHaveClass("info");
+      const emailLabel = screen.getByText("email");
+      expect(emailLabel).toHaveClass("info");
+
+      await act(() =>
+        userEvent.type(screen.getByLabelText("password"), "123456"),
+      );
+
+      const passwordLabel = screen.getByText("password");
 
       await act(() => userEvent.click(screen.getByTestId("submit")));
 
-      expect(label).toHaveClass("red");
+      expect(passwordLabel).toHaveClass("info");
+      expect(emailLabel).toHaveClass("red");
     });
   });
 });
