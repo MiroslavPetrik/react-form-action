@@ -73,4 +73,47 @@ describe("FieldError", () => {
       expect(label).toHaveClass("error");
     });
   });
+
+  describe("with prop reducers", () => {
+    test("the render prop receives the props from the reducers", async () => {
+      const action = formAction
+        .input(z.object({ email: z.email() }))
+        .run(async () => {
+          return "success";
+        });
+
+      const { FieldError } = createComponents(action, {
+        fieldProps: {
+          color: (state) => (state.isInvalid ? "red" : "info"),
+        },
+      });
+
+      function Test() {
+        return (
+          <Action action={action} initialData="">
+            <Form>
+              <input name="email" id="email" />
+              <button type="submit" data-testid="submit" />
+              <FieldError name="email">
+                {({ name, color }) => (
+                  <label htmlFor="email" className={color}>
+                    {name}
+                  </label>
+                )}
+              </FieldError>
+            </Form>
+          </Action>
+        );
+      }
+
+      render(<Test />);
+
+      const label = screen.getByText("email");
+      expect(label).toHaveClass("info");
+
+      await act(() => userEvent.click(screen.getByTestId("submit")));
+
+      expect(label).toHaveClass("red");
+    });
+  });
 });

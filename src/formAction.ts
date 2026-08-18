@@ -14,7 +14,7 @@ const emptyInput = Symbol();
 
 type EmptyInput = typeof emptyInput;
 
-type Flatten<T> = Identity<{
+export type Flatten<T> = Identity<{
   [K in keyof T]: T[K];
 }>;
 

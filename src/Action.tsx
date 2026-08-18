@@ -15,6 +15,7 @@ import type {
   SuccessState,
 } from "./createFormAction";
 import { createFormAction, initial } from "./createFormAction";
+import type { Flatten } from "./formAction";
 
 export type ActionProps<
   Data,
@@ -50,14 +51,16 @@ type ActionStatusFlags<
 
 export type ActionContextState<
   T extends ActionState<unknown, unknown, unknown>,
-> = T &
-  ActionStatusFlags<T["type"]> & {
-    /**
-     * The dispatch function returned from React.useActionState()
-     */
-    action: (payload: FormData) => void;
-    isPending: boolean;
-  };
+> = Flatten<
+  T &
+    ActionStatusFlags<T["type"]> & {
+      /**
+       * The dispatch function returned from React.useActionState()
+       */
+      action: (payload: FormData) => void;
+      isPending: boolean;
+    }
+>;
 
 const neverMetaState: ActionStatusFlags = {
   isInitial: false,
@@ -69,7 +72,7 @@ const neverMetaState: ActionStatusFlags = {
 /**
  * NOTE: ActionContextState<ActionState<...>> would not allow discriminate the union inside of the ActionState.
  */
-type SpreadActionContext<
+export type SpreadActionContext<
   Data = unknown,
   Error = unknown,
   ValidationError = unknown,

@@ -3,8 +3,10 @@
 import type React from "react";
 import type { PropsWithChildren } from "react";
 import type { $ZodErrorTree } from "zod/v4/core";
+import type { SpreadActionContext } from "./Action";
 import { useActionContext } from "./Action";
 import type { FormAction } from "./createFormAction";
+import type { Flatten } from "./formAction";
 import {
   type InferZodErrorPaths,
   noError,
@@ -12,32 +14,62 @@ import {
   type ZodFieldErrorChildrenProps,
 } from "./ZodFieldError";
 
+type Reducers<State = unknown> = Record<string, (state: State) => unknown>;
+
+// biome-ignore lint/suspicious/noExplicitAny: ok
+type InferFieldProps<T extends Reducers<any>> = {
+  [K in keyof T]: ReturnType<T[K]>;
+};
+
 /**
  * Creates a typed components for actions created with the formAction builder.
  */
 export function createComponents<
   Data,
   Error,
+  // biome-ignore lint/suspicious/noExplicitAny: ok
   ValidationError extends $ZodErrorTree<any>,
   Args extends unknown[] = [],
->(action: FormAction<Data, Error, ValidationError, FormData, Args>) {
+  FieldReducers extends Reducers<
+    SpreadActionContext<Data, Error, ValidationError>
+  > = Reducers<SpreadActionContext<Data, Error, ValidationError>>,
+>(
+  action: FormAction<Data, Error, ValidationError, FormData, Args>,
+  options: {
+    fieldProps?: FieldReducers;
+  } = {},
+) {
+  type FieldProps = InferFieldProps<FieldReducers>;
+
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
     children,
   }: {
     name: Name;
-    children?: (props: ZodFieldErrorChildrenProps<Name>) => React.ReactNode;
+    children?: (
+      props: Flatten<ZodFieldErrorChildrenProps<Name> & FieldProps>,
+    ) => React.ReactNode;
   }) {
-    const { isInvalid, validationError } = useActionContext(action);
+    const state = useActionContext(action);
 
+    const { isInvalid, validationError } = state;
     const defaultChildren = ({ error }: ZodFieldErrorChildrenProps<Name>) =>
       isInvalid && <>{error}</>;
+
+    const fieldProps = Object.fromEntries(
+      Object.entries(options.fieldProps ?? {}).map(([prop, reducer]) => [
+        prop,
+        reducer(state),
+      ]),
+    );
+
+    const render = children ?? defaultChildren;
 
     return (
       // @ts-expect-error fine
       <ZodFieldError errors={validationError ?? noError} name={name}>
-        {/** @ts-expect-error fine */}
-        {children ?? defaultChildren}
+        {/** @ts-expect-error empty name ("") is fine */}
+        {(errorProps) => render({ ...errorProps, ...fieldProps })}
       </ZodFieldError>
     );
   }
