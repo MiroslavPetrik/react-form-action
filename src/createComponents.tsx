@@ -81,6 +81,27 @@ export function createComponents<
     );
   }
 
+  function Failure({
+    children,
+  }:
+    | PropsWithChildren
+    | {
+        children?: (props: {
+          isFailure: true;
+          error: Error;
+        }) => React.ReactNode;
+      }) {
+    const { isFailure, error } = useActionContext(action);
+
+    if (isFailure) {
+      return typeof children === "function"
+        ? children({ isFailure, error })
+        : children;
+    }
+
+    return null;
+  }
+
   function Success({
     children,
   }:
@@ -95,7 +116,6 @@ export function createComponents<
     const { isSuccess, data } = useActionContext(action);
 
     if (typeof children === "function") {
-      // return children({ isSuccess, data });
       if (isSuccess) {
         return children({ isSuccess, data });
       } else {
@@ -132,6 +152,7 @@ export function createComponents<
 
   return {
     FieldError,
+    Failure,
     Success,
     Invalid,
   };

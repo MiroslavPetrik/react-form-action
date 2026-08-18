@@ -1,31 +1,31 @@
 import { act, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import { z } from "zod/v4";
 import { Action } from "./Action";
 import { createComponents } from "./createComponents";
 import { Form } from "./Form";
 import { formAction } from "./formAction";
 
-describe("Success", () => {
-  // TODO: drop input https://github.com/MiroslavPetrik/react-form-action/issues/12
-  const action = formAction.input(z.object({})).run(async () => {
-    return "success";
-  });
+describe("Failure", () => {
+  const action = formAction
+    .error(async () => "Oops!")
+    .run(async () => {
+      throw new Error();
+    });
 
-  const { Success } = createComponents(action);
+  const { Failure } = createComponents(action);
 
   describe("when children are ReactNode/JSX", () => {
-    test("it renders children when the action succeeded", async () => {
+    test("it renders children when the action failed & handled the error", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action} initialData={undefined as never}>
             <Form>
               <button type="submit" data-testid="submit" />
               <div data-testid="wrapper">
-                <Success>
-                  <p>OK</p>
-                </Success>
+                <Failure>
+                  <p>ERR</p>
+                </Failure>
               </div>
             </Form>
           </Action>
@@ -40,22 +40,22 @@ describe("Success", () => {
       await act(() => userEvent.click(submit));
 
       expect(screen.getByTestId("wrapper")).not.toBeEmptyDOMElement();
-      expect(screen.getByText("OK")).toBeInTheDocument();
+      expect(screen.getByText("ERR")).toBeInTheDocument();
     });
   });
 
   describe("when children is a render prop", () => {
-    test("it always render children", async () => {
+    test("it provides the error to the render prop", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action} initialData={undefined as never}>
             <Form>
               <button type="submit" data-testid="submit" />
-              <Success>
-                {({ isSuccess, data }) => (
-                  <p className={isSuccess ? data : "info"}>Color</p>
-                )}
-              </Success>
+              <div data-testid="wrapper">
+                <Failure>
+                  {({ error }) => <p className="error">{error}</p>}
+                </Failure>
+              </div>
             </Form>
           </Action>
         );
@@ -63,12 +63,14 @@ describe("Success", () => {
 
       render(<Test />);
 
-      const label = screen.getByText("Color");
-      expect(label).toHaveClass("info");
+      expect(screen.getByTestId("wrapper")).toBeEmptyDOMElement();
 
-      await act(() => userEvent.click(screen.getByTestId("submit")));
+      const submit = screen.getByTestId("submit");
+      await act(() => userEvent.click(submit));
 
-      expect(label).toHaveClass("success");
+      expect(screen.getByTestId("wrapper")).not.toBeEmptyDOMElement();
+      const error = screen.getByText("Oops!");
+      expect(error).toHaveClass("error");
     });
   });
 });
