@@ -24,6 +24,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 - ✅ Binds the action with the arguments from the _args_ prop.
 - ✅ Has an optional `validate` prop to validate the form data client-side before calling the server action.
 - ✅ Enables you to reset the action state with the `reset()` callback.
+- ✅ `useResetAction()` hook (or `<ResetAction />` component) to automatically initialize your action when the hook/component unmounts.
 
 **Context-bound `<Form />` component**
 
@@ -334,6 +335,44 @@ export function SignUpAction({ children }: PropsWithChildren) {
   );
 }
 ```
+
+#### Automatic action state reset (when unmounting component)
+
+Works with Next.js routing, where routes are wrapped in `<Activity />`.
+
+```tsx
+"use client";
+
+import type { PropsWithChildren } from "react";
+import { Action, ResetAction } from "react-form-action/client";
+
+import { updateUser } from "./action";
+
+export function UpdateUserAction({ children }: PropsWithChildren) {
+  return (
+    <Action
+      action={updateUser}
+      initialData={undefined}
+    >
+      {/* IMPORTANT: must be rendered as a child of the <Action /> context. */}
+      <ResetAction />
+      {children}
+    </Action>
+  );
+}
+```
+
+When you prefer hooks to JSX, you can use the `useResetAction()` usually in your forms:
+
+```tsx
+import { Form, useResetAction } from "react-form-action/client";
+
+function MyForm() {
+  useResetAction();
+
+  return <Form>...</Form>
+}
+``` 
 
 
 ### `<Form>` Component
