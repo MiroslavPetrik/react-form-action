@@ -6,6 +6,7 @@ import {
   startTransition,
   use,
   useActionState,
+  useCallback,
 } from "react";
 import type {
   ActionState,
@@ -170,11 +171,11 @@ export function Action<
     permalink,
   );
 
-  function reset() {
+  const reset = useCallback(() => {
     startTransition(() => {
       action(null);
     });
-  }
+  }, [action]);
 
   const metaState =
     state.type === "initial"
