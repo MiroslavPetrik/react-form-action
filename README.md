@@ -23,6 +23,7 @@ End-to-end typesafe success, error & validation state control for Next.js form a
 - ✅ Computes progress flags like `isInvalid`, `isSuccess` based on the envelope type.
 - ✅ Binds the action with the arguments from the _args_ prop.
 - ✅ Has an optional `validate` prop to validate the form data client-side before calling the server action.
+- ✅ Enables you to reset the action state with the `reset()` callback.
 
 **Context-bound `<Form />` component**
 

@@ -3,6 +3,7 @@
 import {
   createContext,
   type PropsWithChildren,
+  startTransition,
   use,
   useActionState,
 } from "react";
@@ -58,6 +59,10 @@ export type ActionContextState<
        * The dispatch function returned from React.useActionState()
        */
       action: (payload: FormData) => void;
+      /**
+       * A function to reset the form action state to its initial state.
+       */
+      reset: () => void;
       isPending: boolean;
     }
 >;
@@ -129,7 +134,11 @@ export function Action<
 
   const [state, action, isPending] = useActionState(
     // biome-ignore lint/suspicious/noExplicitAny: fine
-    async (state: any, payload: FormData) => {
+    async (state: any, payload: FormData | null) => {
+      if (payload === null) {
+        return initial(initialData);
+      }
+
       if (validate) {
         const clientValidateAction = createFormAction(
           ({ invalid, success }) => {
@@ -161,12 +170,19 @@ export function Action<
     permalink,
   );
 
+  function reset() {
+    startTransition(() => {
+      action(null);
+    });
+  }
+
   const metaState =
     state.type === "initial"
       ? {
           ...state,
           ...neverMetaState,
           action,
+          reset,
           isPending,
           isInitial: true as const,
         }
@@ -175,6 +191,7 @@ export function Action<
             ...state,
             ...neverMetaState,
             action,
+            reset,
             isPending,
             isInvalid: true as const,
           }
@@ -183,6 +200,7 @@ export function Action<
               ...state,
               ...neverMetaState,
               action,
+              reset,
               isPending,
               isFailure: true as const,
             }
@@ -190,6 +208,7 @@ export function Action<
               ...state,
               ...neverMetaState,
               action,
+              reset,
               isPending,
               isSuccess: true as const,
             };

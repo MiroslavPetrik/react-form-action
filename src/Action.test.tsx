@@ -1,14 +1,18 @@
 import { act, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { Action } from "./Action";
+import { Action, useActionContext } from "./Action";
 import { createComponents } from "./createComponents";
 import { Form } from "./Form";
 import { formAction } from "./formAction";
 
 describe("Action", () => {
+  beforeEach(() => {
+    z.config(z.locales.en());
+  });
+
   test("it enables form to consume action via context", async () => {
     const subscribeAction = vi.fn(
       formAction
@@ -167,6 +171,57 @@ describe("Action", () => {
         screen.getByText("Neplatný formát e-mailová adresa"),
       ).toBeInTheDocument();
       expect(subscribeAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("reset function", () => {
+    test("it resets the form action state to its initial state", async () => {
+      const subscribeAction = formAction
+        .input(
+          z.object({
+            email: z.email(),
+          }),
+        )
+        .run(async () => {
+          return null;
+        });
+
+      const { FieldError } = createComponents(subscribeAction);
+
+      function ResetButton() {
+        const { reset } = useActionContext();
+        return (
+          <button type="button" data-testid="reset" onClick={reset}>
+            Reset
+          </button>
+        );
+      }
+
+      function SubscribeForm() {
+        return (
+          <Action action={subscribeAction} initialData={null}>
+            <Form>
+              <input type="text" name="email" data-testid="email" />
+              <FieldError name="email" />
+              <button type="submit" data-testid="submit" />
+              <ResetButton />
+            </Form>
+          </Action>
+        );
+      }
+
+      render(<SubscribeForm />);
+
+      await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
+      await act(() => userEvent.click(screen.getByTestId("submit")));
+
+      expect(screen.getByText("Invalid email address")).toBeInTheDocument();
+
+      await act(() => userEvent.click(screen.getByTestId("reset")));
+
+      expect(
+        screen.queryByText("Invalid email address"),
+      ).not.toBeInTheDocument();
     });
   });
 });
