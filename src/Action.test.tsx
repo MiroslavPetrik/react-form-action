@@ -1,5 +1,6 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { Activity } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -222,6 +223,74 @@ describe("Action", () => {
       expect(
         screen.queryByText("Invalid email address"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("autoReset prop, resetting the action state when unmounted", () => {
+    const subscribeAction = formAction
+      .input(
+        z.object({
+          email: z.email(),
+        }),
+      )
+      .run(async () => {
+        return null;
+      });
+
+    const { FieldError } = createComponents(subscribeAction);
+
+    function SubscribeForm({
+      unmounted,
+      autoReset = true,
+    }: {
+      unmounted?: boolean;
+      autoReset?: boolean;
+    }) {
+      return (
+        <Activity mode={unmounted ? "hidden" : undefined}>
+          <Action
+            action={subscribeAction}
+            initialData={null}
+            autoReset={autoReset}
+          >
+            <Form>
+              <input type="text" name="email" data-testid="email" />
+              <FieldError name="email" />
+              <button type="submit" data-testid="submit" />
+            </Form>
+          </Action>
+        </Activity>
+      );
+    }
+
+    test("when autoReset=true (default), it resets the action state", async () => {
+      const { rerender } = render(<SubscribeForm />);
+
+      await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
+      await act(() => userEvent.click(screen.getByTestId("submit")));
+
+      expect(screen.getByText("Invalid email address")).toBeInTheDocument();
+
+      await act(async () => rerender(<SubscribeForm unmounted />));
+
+      expect(
+        screen.queryByText("Invalid email address"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("when autoReset=false, it does not reset the action state automatically", async () => {
+      const { rerender } = render(<SubscribeForm autoReset={false} />);
+
+      await act(() => userEvent.type(screen.getByTestId("email"), "fake"));
+      await act(() => userEvent.click(screen.getByTestId("submit")));
+
+      expect(screen.getByText("Invalid email address")).toBeInTheDocument();
+
+      await act(async () =>
+        rerender(<SubscribeForm unmounted autoReset={false} />),
+      );
+
+      expect(screen.getByText("Invalid email address")).toBeInTheDocument();
     });
   });
 });

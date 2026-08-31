@@ -18,6 +18,7 @@ import type {
 } from "./createFormAction";
 import { createFormAction, initial } from "./createFormAction";
 import type { Flatten } from "./formAction";
+import { ResetAction } from "./useResetAction";
 
 export type ActionProps<
   Data,
@@ -25,21 +26,28 @@ export type ActionProps<
   ValidationError,
   Arguments extends unknown[] = [],
 > = PropsWithChildren<
-  Arguments extends [unknown, ...unknown[]]
+  {
+    /**
+     * Whether the form action should automatically reset when unmounted.
+     */
+    autoReset?: boolean;
+    /**
+     * A function to validate the form data before submission.
+     * When the function returns a ValidationError value, the action state will turn to "invalid".
+     * Return nullable value, to proceed with the submission.
+     */
+    validate?: (payload: FormData) => ValidationError | undefined | null;
+    permalink?: string;
+    initialData: Data;
+  } & (Arguments extends [unknown, ...unknown[]]
     ? {
         action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
         args: Arguments;
-        initialData: Data;
-        permalink?: string;
-        validate?: (payload: FormData) => null | ValidationError;
       }
     : {
         action: FormAction<Data, Error, ValidationError, FormData, Arguments>;
-        initialData: Data;
         args?: undefined;
-        permalink?: string;
-        validate?: (payload: FormData) => null | ValidationError;
-      }
+      })
 >;
 
 type ActionStatusFlags<
@@ -126,6 +134,7 @@ export function Action<
   args,
   permalink,
   validate,
+  autoReset,
 }: ActionProps<Data, Error, ValidationError, Args>) {
   type NoArgsAction = FormAction<Data, Error, ValidationError, FormData, []>;
 
@@ -212,5 +221,10 @@ export function Action<
               isSuccess: true as const,
             };
 
-  return <ActionContext value={context}>{children}</ActionContext>;
+  return (
+    <ActionContext value={context}>
+      {autoReset && <ResetAction />}
+      {children}
+    </ActionContext>
+  );
 }
