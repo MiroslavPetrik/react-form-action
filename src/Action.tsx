@@ -177,42 +177,40 @@ export function Action<
     });
   }, [action]);
 
-  const metaState =
+  const dispatch = {
+    action,
+    reset,
+    isPending,
+  };
+
+  const context =
     state.type === "initial"
       ? {
+          ...dispatch,
           ...state,
           ...neverMetaState,
-          action,
-          reset,
-          isPending,
           isInitial: true as const,
         }
       : state.type === "invalid"
         ? {
+            ...dispatch,
             ...state,
             ...neverMetaState,
-            action,
-            reset,
-            isPending,
             isInvalid: true as const,
           }
         : state.type === "failure"
           ? {
+              ...dispatch,
               ...state,
               ...neverMetaState,
-              action,
-              reset,
-              isPending,
               isFailure: true as const,
             }
           : {
+              ...dispatch,
               ...state,
               ...neverMetaState,
-              action,
-              reset,
-              isPending,
               isSuccess: true as const,
             };
 
-  return <ActionContext value={metaState}>{children}</ActionContext>;
+  return <ActionContext value={context}>{children}</ActionContext>;
 }
