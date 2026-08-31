@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noConfusingVoidType: async fn return Promise<void> by default
 import { describe, expectTypeOf, test } from "vitest";
 import { z } from "zod/v4";
 import type { $ZodErrorTree } from "zod/v4/core";

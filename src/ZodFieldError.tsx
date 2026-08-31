@@ -13,7 +13,7 @@ export type Paths<
     ? NonNullable<Props[k]> extends $ZodErrorTree<object>
       ? "properties" extends keyof NonNullable<Props[k]>
         ? `${k}${typeof SEPARATOR}${Paths<NonNullable<Props[k]>>}`
-        : k // leaf node
+        : k
       : k
     : never;
 }[keyof Props];
@@ -22,7 +22,7 @@ export type InferZodErrorPaths<T> =
   T extends $ZodErrorTree<object> ? Paths<T> : never;
 
 export type ZodFieldErrorProps<
-  Errors extends $ZodErrorTree<any>,
+  Errors extends $ZodErrorTree<unknown>,
   Name extends "" | InferZodErrorPaths<Errors>,
 > = {
   errors: Errors;

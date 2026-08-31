@@ -55,8 +55,6 @@ type SchemaAction<
   input: z.output<Schema>;
 }) => Promise<Data>;
 
-// type AnyZodEffects = ZodEffects<any, any, any>;
-
 type FormActionBuilder<
   Schema extends ZodType | EmptyInput,
   Args extends $ZodType[] = [],
@@ -68,18 +66,7 @@ type FormActionBuilder<
     args: T,
   ) => FormActionBuilder<Schema, [...Args, ...T], TErr, Context>;
   input: <T extends ZodObject>(
-    newInput: T extends ZodObject
-      ? T
-      : // ? Schema extends AnyZodEffects
-        //   ? "Extending schema with effect is not possible."
-        //   : Schema extends EmptyInput
-        //     ? T // valid initial schema, possibly with effects
-        //     : Schema extends ZodType
-        //       ? T extends AnyZodEffects
-        //         ? "Your input contains effect which prevents merging it with the previous inputs."
-        //         : T
-        //       : T
-        "The schema output must be an object.",
+    newInput: T extends ZodObject ? T : "The schema output must be an object.",
   ) => FormActionBuilder<
     Schema extends ZodObject<infer O1 extends $ZodShape>
       ? // merging won't work for effects, but that is sanitized in input parameter
