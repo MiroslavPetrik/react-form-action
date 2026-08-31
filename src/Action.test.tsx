@@ -241,7 +241,7 @@ describe("Action", () => {
 
     function SubscribeForm({
       unmounted,
-      autoReset = true,
+      autoReset,
     }: {
       unmounted?: boolean;
       autoReset?: boolean;

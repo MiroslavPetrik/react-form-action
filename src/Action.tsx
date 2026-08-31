@@ -134,7 +134,7 @@ export function Action<
   args,
   permalink,
   validate,
-  autoReset,
+  autoReset = true,
 }: ActionProps<Data, Error, ValidationError, Args>) {
   type NoArgsAction = FormAction<Data, Error, ValidationError, FormData, []>;
 
