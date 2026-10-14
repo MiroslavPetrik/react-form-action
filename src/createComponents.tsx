@@ -46,6 +46,17 @@ export function createComponents<
 ) {
   type FieldProps = InferFieldProps<FieldReducers>;
 
+  function Value<Name extends "" | InferZodErrorPaths<ValidationError>>({
+    name,
+    value,
+    ...props
+  }: {
+    name: Name;
+    value: string;
+  } & React.InputHTMLAttributes<HTMLInputElement>) {
+    return <input type="hidden" name={name} defaultValue={value} {...props} />;
+  }
+
   function FieldError<Name extends "" | InferZodErrorPaths<ValidationError>>({
     name,
     children,
@@ -155,5 +166,6 @@ export function createComponents<
     Failure,
     Success,
     Invalid,
+    Value,
   };
 }

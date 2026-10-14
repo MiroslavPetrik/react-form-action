@@ -451,6 +451,40 @@ export function SignUpForm() {
 }
 ```
 
+#### `<Value>`
+
+Renders a hidden `<input>` with a fixed value, so a form can submit a value without a visible field. Use it to send the same form with different values, e.g. one submit button per decision.
+
+Props:
+- `name` - the form field name. Like `<FieldError>`, it is typed to the paths of the action's input schema.
+- `value` - the string value submitted with the form.
+- Any other `<input>` attributes are passed through to the hidden input.
+
+```tsx
+import { Action, Form, createComponents } from "react-form-action/client";
+
+import { decisionAction } from "./actions";
+
+// 🌟 The name prop is bound to the decisionAction input schema
+const { Value } = createComponents(decisionAction);
+
+export function DecisionForm() {
+  return (
+    <Action action={decisionAction}>
+      <Form>
+        {/* 👉 Submits decision=accept when the button is clicked */}
+        <Value name="decision" value="accept" />
+        <button type="submit">Accept</button>
+      </Form>
+      <Form>
+        <Value name="decision" value="deny" />
+        <button type="submit">Deny</button>
+      </Form>
+    </Action>
+  );
+}
+```
+
 #### `<Success>`
 
 #### When children are JSX
