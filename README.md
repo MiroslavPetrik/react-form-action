@@ -396,6 +396,56 @@ export function UpdateUserForm() {
 }
 ```
 
+### `<Submit>`
+
+A render prop component for submit buttons. It combines the action pending state (from the `<Action>` context) with the native `useFormStatus()` of the enclosing `<form>`.
+
+⚠️ Must be rendered within a `<form>` (e.g. the `<Form>` component) which is a descendant of `<Action>`.
+
+The render prop receives the `FormStatus` fields (`pending`, `data`, `method`, `action`) and an additional `disabled` flag, which is `true` while the **action** is pending.
+
+```tsx
+import type { ReactNode } from "react";
+import { Action, Form, Submit } from "react-form-action/client";
+
+
+// 👉 Use the <Submit> to define your custom SubmitButton: 
+function SubmitButton({
+  children,
+  pendingLabel,
+}: {
+  children: ReactNode;
+  pendingLabel: string;
+}) {
+  return (
+    <Submit>
+      {({ pending, disabled }) => (
+        // 👉 `disabled` reflects the action state, `pending` the form submission
+        <button type="submit" disabled={disabled}>
+          {pending ? pendingLabel : children}
+        </button>
+      )}
+    </Submit>
+  );
+}
+
+// 👉 on submit, both buttons will be disabled but only the submitted one will have the pending label
+function DecisionForm() {
+  return (
+    <Action action={decideAction}>
+      <Form>
+        <input type="hidden" name="decision" defaultValue="accept" />
+        <SubmitButton pendingLabel="Accepting...">Accept</SubmitButton>
+      </Form>
+      <Form>
+        <input type="hidden" name="decision" defaultValue="reject" />
+        <SubmitButton pendingLabel="Rejecting...">Reject</SubmitButton>
+      </Form>
+    </Action>
+  );
+}
+```
+
 ### Context Bound Components `createComponents()`
 
 Use the `createComponents(action)` helper to create components which use the ActionContext and have types bound to the action type.
@@ -569,8 +619,6 @@ function SubmitButton() {
   );
 };
 ```
-
-
 
 ### Action Creator
 
