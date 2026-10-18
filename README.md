@@ -67,9 +67,8 @@ export const subscribeAction = formAction
 
 import {
   Form,
-  Pending,
+  Submit,
   createComponents,
-  useActionContext,
 } from "react-form-action/client";
 
 import { subscribeAction } from "./action";
@@ -77,13 +76,12 @@ import { subscribeAction } from "./action";
 const { FieldError, Success } = createComponents(subscribeAction);
 
 export function SubscribeForm() {
-  const { isPending, isFailure, error, data } =
-    useActionContext(subscribeAction);
-
   return (
     <Form>
       <Success>
-        <p>✅ Email {data} was registered.</p>
+        {({ isSuccess, data }) =>
+          isSuccess && <p>✅ Please check your email :{data}.</p>
+        }
       </Success>
       {/*💡 The FieldError "name" prop supports autocompletion */}
       <FieldError name="email">
@@ -91,10 +89,13 @@ export function SubscribeForm() {
           <input className={error ? "invalid" : ""} name={name} />
         )}
       </FieldError>
-      <button type="submit" disabled={isPending}>
-        {isPending ? "🌀 Submitting..." : "Submit"}
-      </button>
-      <Pending>Please wait...</Pending>
+      <Submit>
+        {({ pending, disabled }) => (
+          <button type="submit" disabled={disabled}>
+            {pending ? "🌀 Submitting..." : "Submit"}
+          </button>
+        )}
+      </Submit>
     </Form>
   );
 }
