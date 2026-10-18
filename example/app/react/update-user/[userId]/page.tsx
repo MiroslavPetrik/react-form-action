@@ -9,5 +9,10 @@ type Props = {
 export default async function Page({ params }: Props) {
   const { userId } = await params;
 
-  return <UpdateUserForm userId={userId} />;
+  return (
+    <>
+      <h1>User update (React)</h1>
+      <UpdateUserForm userId={userId} />
+    </>
+  );
 }

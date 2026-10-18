@@ -7,7 +7,7 @@
 export function updateUser(
   userId: string,
   _state: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   return {
     userId,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,6 +32,19 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
         ></link>
+        <nav>
+          <ul>
+            <li>
+              <strong>react-form-action</strong>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <Link href="/">Demos</Link>
+            </li>
+          </ul>
+        </nav>
+        <hr />
         {children}
       </body>
     </html>

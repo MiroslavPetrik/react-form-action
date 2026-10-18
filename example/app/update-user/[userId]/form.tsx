@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Form, useActionContext } from "react-form-action/client";
 import { updateUser } from "./action";
 
@@ -19,14 +18,7 @@ export function UpdateUserForm() {
         {isSuccess ? `✅ Updated id=${data.userId} to name=${data.name}` : null}
         {isFailure ? `❌ ${error.message}` : null}
       </p>
-      <ul>
-        <li>
-          <Link href="/update-user/9">Valid user</Link>
-        </li>
-        <li>
-          <Link href="/update-user/123">Invalid user</Link>
-        </li>
-      </ul>
+
     </Form>
   );
 }

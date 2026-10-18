@@ -19,5 +19,5 @@ export const signUpAction = formAction.input(signupSchema).run(
     }
 
     return null;
-  }
+  },
 );

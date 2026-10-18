@@ -8,18 +8,25 @@ export default function Home() {
         href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
       ></link>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <h1>Demos:</h1>
-        <ul>
-          <li>
-            <Link href="/subscribe">Subscribe Form</Link>
-          </li>
-          <li>
-            <Link href="/update-user/9">User update</Link>
-          </li>
-          <li>
-            <Link href="/signup">Signup Form</Link>
-          </li>
-        </ul>
+        <h1>Demos</h1>
+        <aside>
+          <nav>
+            <ul>
+              <li>
+                <Link href="/subscribe">Subscribe Form</Link>
+              </li>
+              <li>
+                <Link href="/update-user/9">User update</Link>
+              </li>
+              <li>
+                <Link href="/signup">Signup Form</Link>
+              </li>
+              <li>
+                <Link href="/follow-request">Follow request (Submit)</Link>
+              </li>
+            </ul>
+          </nav>
+        </aside>
       </main>
     </div>
   );

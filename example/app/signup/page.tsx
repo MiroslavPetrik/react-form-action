@@ -4,8 +4,11 @@ import { signUpAction } from "./action";
 
 export default function Page() {
   return (
-    <Action action={signUpAction} initialData={null}>
-      <SignUpForm />
-    </Action>
+    <>
+      <h1>Signup Form</h1>
+      <Action action={signUpAction} initialData={null}>
+        <SignUpForm />
+      </Action>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, createComponents } from "react-form-action/client";
+import { createComponents, Form } from "react-form-action/client";
 
 import { signUpAction } from "./action";
 

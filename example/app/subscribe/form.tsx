@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Form,
   createComponents,
+  Form,
   useActionContext,
 } from "react-form-action/client";
 
@@ -10,7 +10,7 @@ import { subscribeAction } from "./action";
 
 const { FieldError, Success } = createComponents(subscribeAction);
 
-function Error() {
+function ErrorMessage() {
   const { isFailure, error } = useActionContext(subscribeAction);
 
   return isFailure && error;
@@ -24,7 +24,7 @@ export function SubscribeForm() {
       <Success>
         <div>Subscribed!</div>
       </Success>
-      <Error />
+      <ErrorMessage />
       <div>
         <input
           name="email"
