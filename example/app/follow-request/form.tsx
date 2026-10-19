@@ -1,22 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  Form,
-  Submit,
-  createComponents,
-  useActionContext,
-} from "react-form-action/client";
+import { createComponents, Form, Submit } from "react-form-action/client";
 
 import { followRequestAction } from "./action";
 
 const { Success, Value } = createComponents(followRequestAction);
-
-const messages = {
-  accept: "Request accepted. xyz now follows you.",
-  reject: "Request rejected.",
-  block: "xyz has been blocked.",
-};
 
 function SubmitButton({
   children,
@@ -39,43 +28,35 @@ function SubmitButton({
   );
 }
 
-function Result() {
-  const { isSuccess, data } = useActionContext(followRequestAction);
-
-  return isSuccess ? <p>{messages[data]}</p> : null;
-}
-
 export function FollowRequestForm() {
   return (
     <article>
-      <header>
-        Follow Request
-      </header>
+      <header>Follow Request</header>
       <p>
         User <strong>xyz</strong> wants to follow you.
       </p>
       <Success>
-        <Result />
+        {({ isSuccess, data }) => (isSuccess ? <p>{data}</p> : null)}
       </Success>
       <footer>
-      <div className="grid">
-        <Form>
-          <Value name="decision" value="accept" />
-          <SubmitButton pendingLabel="Accepting...">Accept</SubmitButton>
-        </Form>
-        <Form>
-          <Value name="decision" value="reject" />
-          <SubmitButton pendingLabel="Rejecting..." className="secondary">
-            Reject
-          </SubmitButton>
-        </Form>
-        <Form>
-          <Value name="decision" value="block" />
-          <SubmitButton pendingLabel="Blocking..." className="contrast">
-            Block
-          </SubmitButton>
-        </Form>
-      </div>
+        <div className="grid">
+          <Form>
+            <Value name="decision" value="accept" />
+            <SubmitButton pendingLabel="Accepting...">Accept</SubmitButton>
+          </Form>
+          <Form>
+            <Value name="decision" value="reject" />
+            <SubmitButton pendingLabel="Rejecting..." className="secondary">
+              Reject
+            </SubmitButton>
+          </Form>
+          <Form>
+            <Value name="decision" value="block" />
+            <SubmitButton pendingLabel="Blocking..." className="contrast">
+              Block
+            </SubmitButton>
+          </Form>
+        </div>
       </footer>
     </article>
   );
