@@ -57,22 +57,22 @@
     "zod-form-data": "^3.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.11",
-    "@testing-library/dom": "^10.4.1",
+    "@biomejs/biome": "^2.6.6",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.6",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
-    "@vitejs/plugin-react": "^6.1.1",
-    "happy-dom": "^20.12.0",
-    "npm-check-updates": "^23.1.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "tsdown": "^0.22.14",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "happy-dom": "^21.0.4",
+    "npm-check-updates": "^23.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsdown": "^0.23.7",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.11",
-    "zod": "^4.5.4",
-    "zod-form-data": "^3.0.3"
+    "vitest": "^5.1.0",
+    "zod": "^4.6.7",
+    "zod-form-data": "^3.0.4"
   }
 }
