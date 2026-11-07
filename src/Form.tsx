@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent, JSX } from "react";
+import type { JSX, SubmitEvent } from "react";
 import { startTransition } from "react";
 
 import { useActionContext } from "./Action";
@@ -21,7 +21,7 @@ export function Form({ autoReset = false, ...props }: FormProps) {
   const submitStrategy = autoReset
     ? { action }
     : {
-        onSubmit: (event: FormEvent<HTMLFormElement>) => {
+        onSubmit: (event: SubmitEvent<HTMLFormElement>) => {
           event.preventDefault();
           const form = event.currentTarget;
           startTransition(() => {
