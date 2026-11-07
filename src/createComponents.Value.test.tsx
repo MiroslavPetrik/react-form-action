@@ -19,7 +19,7 @@ describe("Value", () => {
   test("sets value via hidden input", async () => {
     function Test() {
       return (
-        <Action action={action} initialData={undefined as any}>
+        <Action action={action}>
           <Success>{({ isSuccess, data }) => isSuccess && data}</Success>
           <Form>
             <Value name="decision" value="accept" />

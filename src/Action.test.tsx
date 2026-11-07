@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { Activity } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -31,7 +31,7 @@ describe("Action", () => {
 
     function SubscribeForm() {
       return (
-        <Action action={subscribeAction} initialData={null}>
+        <Action action={subscribeAction}>
           <Form>
             <input type="text" name="email" data-testid="email" />
             <FieldError name="email" />
@@ -65,7 +65,7 @@ describe("Action", () => {
     test("it binds the args from the props", async () => {
       function HelloForm() {
         return (
-          <Action args={["sk", true]} action={helloAction} initialData="">
+          <Action args={["sk", true]} action={helloAction}>
             <Form>
               <button type="submit" data-testid="submit" />
               <Success>
@@ -92,7 +92,7 @@ describe("Action", () => {
 
       function HelloForm() {
         return (
-          <Action action={manualBind} initialData="">
+          <Action action={manualBind}>
             <Form>
               <button type="submit" data-testid="submit" />
               <Success>
@@ -149,11 +149,7 @@ describe("Action", () => {
 
       function SubscribeForm() {
         return (
-          <Action
-            action={subscribeAction}
-            initialData={null}
-            validate={clientValidate}
-          >
+          <Action action={subscribeAction} validate={clientValidate}>
             <Form>
               <input type="text" name="email" data-testid="email" />
               <FieldError name="email" />
@@ -200,7 +196,7 @@ describe("Action", () => {
 
       function SubscribeForm() {
         return (
-          <Action action={subscribeAction} initialData={null}>
+          <Action action={subscribeAction}>
             <Form>
               <input type="text" name="email" data-testid="email" />
               <FieldError name="email" />
@@ -248,11 +244,7 @@ describe("Action", () => {
     }) {
       return (
         <Activity mode={unmounted ? "hidden" : undefined}>
-          <Action
-            action={subscribeAction}
-            initialData={null}
-            autoReset={autoReset}
-          >
+          <Action action={subscribeAction} autoReset={autoReset}>
             <Form>
               <input type="text" name="email" data-testid="email" />
               <FieldError name="email" />

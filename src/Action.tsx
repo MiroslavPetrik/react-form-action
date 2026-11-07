@@ -38,7 +38,7 @@ export type ActionProps<
      */
     validate?: (payload: FormData) => ValidationError | undefined | null;
     permalink?: string;
-    initialData: Data;
+    initialData?: Data;
   } & (Arguments extends [unknown, ...unknown[]]
     ? {
         action: FormAction<Data, Error, ValidationError, FormData, Arguments>;

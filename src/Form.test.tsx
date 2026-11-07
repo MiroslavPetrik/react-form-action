@@ -15,7 +15,7 @@ describe("Form", () => {
       const ref = useRef(null);
 
       return (
-        <Action action={action} initialData={null}>
+        <Action action={action}>
           <Form
             ref={ref}
             onSubmit={(event) => {

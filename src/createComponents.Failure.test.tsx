@@ -19,7 +19,7 @@ describe("Failure", () => {
     test("it renders children when the action failed & handled the error", async () => {
       function Test() {
         return (
-          <Action action={action} initialData={undefined as never}>
+          <Action action={action}>
             <Form>
               <button type="submit" data-testid="submit" />
               <div data-testid="wrapper">
@@ -48,7 +48,7 @@ describe("Failure", () => {
     test("it provides the error to the render prop", async () => {
       function Test() {
         return (
-          <Action action={action} initialData={undefined as never}>
+          <Action action={action}>
             <Form>
               <button type="submit" data-testid="submit" />
               <div data-testid="wrapper">

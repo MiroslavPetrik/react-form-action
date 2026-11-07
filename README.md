@@ -112,7 +112,7 @@ import { SubscribeForm } from "./form";
 
 export default function Page() {
   return (
-    <Action action={subscribeAction} initialData="">
+    <Action action={subscribeAction}>
       <SubscribeForm />
     </Action>
   );
@@ -227,7 +227,7 @@ export default function Page({
   const { userId } = await params;
 
   return (
-    <Action action={updateUser} args={[await locale(), userId]} initialData="">
+    <Action action={updateUser} args={[await locale(), userId]} >
       <UpdateUserForm />
     </Action>
   );
@@ -299,7 +299,6 @@ export function SignUpAction({ children }: PropsWithChildren) {
   return (
     <Action
       action={signUp}
-      initialData={undefined}
       validate={(formData) => {
         const result = zfd.formData(signUpSchema).safeParse(formData);
 
@@ -328,7 +327,6 @@ export function SignUpAction({ children }: PropsWithChildren) {
   return (
     <Action
       action={signUp}
-      initialData={undefined}
       validate={validateSchema(signUpSchema)}
     >
       {children}
@@ -353,7 +351,6 @@ export function UpdateUserAction({ children }: PropsWithChildren) {
   return (
     <Action
       action={updateUser}
-      initialData={undefined}
     >
       {/* IMPORTANT: must be rendered as a child of the <Action /> context. */}
       <ResetAction />
@@ -486,7 +483,7 @@ const { FieldError } = createComponents(signUpAction);
 
 export function SignUpForm() {
   return (
-    <Action action={signUpAction} initialData={null}>
+    <Action action={signUpAction}>
       <Form>
         {/* 1️⃣ When the "name" prop is an empty string, the top-level error will be rendered e.g.:
           "Passwords don't match" */}

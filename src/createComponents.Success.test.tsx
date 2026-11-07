@@ -19,7 +19,7 @@ describe("Success", () => {
     test("it renders children when the action succeeded", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action}>
             <Form>
               <button type="submit" data-testid="submit" />
               <div data-testid="wrapper">
@@ -48,7 +48,7 @@ describe("Success", () => {
     test("it always render children", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action}>
             <Form>
               <button type="submit" data-testid="submit" />
               <Success>

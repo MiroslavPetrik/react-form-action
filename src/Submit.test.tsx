@@ -30,7 +30,7 @@ describe("Submit", () => {
   test("it disables all submits within the ActionContext, but pending only the submitted one", async () => {
     function Test() {
       return (
-        <Action action={neverResolve} initialData={null}>
+        <Action action={neverResolve}>
           <Form>
             <SubmitButton />
           </Form>

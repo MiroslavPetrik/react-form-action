@@ -26,7 +26,6 @@ describe("validateSchema", () => {
       return (
         <Action
           action={subscribeAction}
-          initialData={null}
           validate={validateSchema(subscribeSchema)}
         >
           <Form>

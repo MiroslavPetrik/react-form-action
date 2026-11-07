@@ -19,7 +19,7 @@ describe("Pending", () => {
     test("it renders children when the action is pending", async () => {
       function Test() {
         return (
-          <Action action={neverResolve} initialData={null}>
+          <Action action={neverResolve}>
             <Form>
               <button type="submit" data-testid="submit" />
               <div data-testid="wrapper">
@@ -48,7 +48,7 @@ describe("Pending", () => {
     test("it always render children", async () => {
       function Test() {
         return (
-          <Action action={neverResolve} initialData={null}>
+          <Action action={neverResolve}>
             <Form>
               <Pending>
                 {({ isPending }) => (

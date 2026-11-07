@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <>
       <h1>Follow request (Submit)</h1>
-      <Action action={followRequestAction} initialData={null}>
+      <Action action={followRequestAction}>
         <FollowRequestForm />
       </Action>
     </>

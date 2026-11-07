@@ -21,7 +21,7 @@ describe("<Invalid />", () => {
         const failAction = action.bind(null, 10);
 
         return (
-          <Action action={failAction} initialData="">
+          <Action action={failAction}>
             <Form>
               <button type="submit" data-testid="submit" />
               <Invalid>

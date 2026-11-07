@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <>
       <h1>Subscribe Form</h1>
-      <Action action={subscribeAction} initialData={null}>
+      <Action action={subscribeAction}>
         <SubscribeForm />
       </Action>
     </>

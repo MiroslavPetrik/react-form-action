@@ -20,7 +20,7 @@ describe("FieldError", () => {
     test("it renders nothing when not invalid", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action}>
             <Form>
               <input name="email" />
               <div data-testid="wrapper">
@@ -47,7 +47,7 @@ describe("FieldError", () => {
     test("it always render children", async () => {
       function Test() {
         return (
-          <Action action={action} initialData="">
+          <Action action={action}>
             <Form>
               <input name="email" id="email" />
               <button type="submit" data-testid="submit" />
@@ -96,7 +96,7 @@ describe("FieldError", () => {
 
       function Test() {
         return (
-          <Action action={signin} initialData="">
+          <Action action={signin}>
             <Form>
               <FieldError name="email">
                 {({ name, color }) => (
